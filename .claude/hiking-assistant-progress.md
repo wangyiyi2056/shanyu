@@ -407,6 +407,12 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
   - 将 `_database!.close()` 改为局部变量 `db`
 - `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
 
+### #36 规范异常捕获类型 (2026-04-15 - 已完成)
+- `lib/features/profile/presentation/providers/settings_provider.dart`:
+  - 将两处 bare `catch (e, st)` 改为 `on Exception catch (e, st)`
+  - 符合 Dart 编码规范：指定异常类型，避免裸 catch
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
 ### #35 减少 Widget 测试中的 OpenStreetMap 网络噪音 (2026-04-15 - 已完成)
 - 为所有 `TileLayer` 配置 `NetworkTileProvider(silenceExceptions: true)`:
   - `lib/features/hiking/presentation/widgets/route_map_preview.dart`

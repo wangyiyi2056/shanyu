@@ -35,7 +35,7 @@ class SettingsNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _datasource.setThemeMode(mode);
       state = const AsyncValue.data(null);
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
@@ -45,7 +45,7 @@ class SettingsNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _datasource.setNotificationsEnabled(enabled);
       state = const AsyncValue.data(null);
-    } catch (e, st) {
+    } on Exception catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
