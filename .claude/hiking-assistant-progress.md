@@ -563,6 +563,19 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
 - 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
 
+### #55 图片内存优化与流回调异常处理 (2026-04-15 - 已完成)
+- `lib/features/auth/presentation/screens/login_screen.dart`:
+  - Google favicon `Image.network` 增加 `cacheWidth: 60`, `cacheHeight: 60`
+- `lib/features/hiking/presentation/screens/home_screen.dart`:
+  - 路线卡片 `Image.network` 增加 `cacheWidth: 240`, `cacheHeight: 240`
+- `lib/features/hiking/presentation/screens/route_detail_screen.dart`:
+  - 路线详情大图 `Image.network` 增加 `cacheWidth: 1200`, `cacheHeight: 720`
+- `lib/features/tracking/presentation/providers/tracking_provider.dart`:
+  - `_onPositionUpdate` 整体包裹 `try/catch`，防止流回调中的异步异常成为未处理 Future
+  - 异常时写入 `state.error`，用户可感知而不是静默失败
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+- 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
+
 ## 用户偏好记录
 - `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
 
