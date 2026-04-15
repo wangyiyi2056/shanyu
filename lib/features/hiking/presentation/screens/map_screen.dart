@@ -365,6 +365,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                   itemBuilder: (context, index) {
                                     final rec = _routes[index];
                                     return NearbyRouteItem(
+                                      key: ValueKey(rec.route.id),
                                       route: rec.route,
                                       onTap: () => _openRouteDetail(rec.route),
                                     );

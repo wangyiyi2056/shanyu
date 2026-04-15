@@ -34,6 +34,7 @@ class FavoritesScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final route = routes[index];
                 return _FavoriteRouteCard(
+                  key: ValueKey(route.id),
                   route: route,
                   onTap: () => context.push('/route/${route.id}', extra: route),
                 );
@@ -106,6 +107,7 @@ class _FavoriteRouteCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _FavoriteRouteCard({
+    super.key,
     required this.route,
     required this.onTap,
   });

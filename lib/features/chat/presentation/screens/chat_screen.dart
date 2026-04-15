@@ -145,6 +145,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             index == 0 || state.messages[index - 1].role != message.role;
 
         return ChatBubble(
+          key: ValueKey(message.id),
           message: message,
           showAvatar: showAvatar,
         );
