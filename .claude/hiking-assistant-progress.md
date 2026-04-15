@@ -4,6 +4,7 @@ description: 爬山助手 AI Agent 项目进展记录
 type: project
 originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 ---
+
 # 爬山助手项目进展
 
 ## 项目概述
@@ -39,8 +40,10 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - 用户位置标记
 - 路线显示
 - 地点点击交互
+- 地图搜索跳转至 AI 聊天
+- 难度筛选（简单/中等/较难/专家）
 
-### 5. 智能路线推荐 (已完成 ✅)
+### 5. 智能路线推荐 (已完成)
 - **路线数据模型**: HikingRoute + Waypoint
 - **本地数据源**: 8 条真实北京爬山路线
   - 香山公园-亲子线 (easy)
@@ -54,76 +57,290 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - **推荐用例**: 基于用户偏好（难度、时长、距离）
 - **AI 集成**: 将推荐路线作为上下文提供给 AI
 
+### 6. 路线详情页面 (已完成)
+- 路线图片、描述、waypoints 展示
+- 导航按钮（调用 Apple Maps / Google Maps）
+- 动态评价列表
+
+### 7. 路线评价系统 (已完成)
+- 用户评分（1-5星）
+- 评论提交与展示
+- 收藏功能
+- SharedPreferences 本地存储
+
+### 8. 天气 API 集成 (已完成)
+- Open-Meteo 免费天气 API（无需 Key）
+- 实时天气查询
+- 3日天气预报
+- 出行建议与安全提醒
+- 集成到 AI 对话上下文
+
+### 9. 轨迹记录功能 (已完成)
+- 实时 GPS 跟踪（Geolocator 位置流）
+- 轨迹数据存储（SQLite + sqflite）
+- 暂停/恢复/停止记录
+- 距离、海拔变化计算
+- 轨迹可视化（地图页面状态面板）
+- 单元测试覆盖（Datasource + Notifier）
+- **轨迹历史列表页面** (`/tracks`)
+- **轨迹详情回放页面** (`/track/:id`，含地图 Polyline 展示)
+- **个人中心数据联动**（实时统计累计路线、距离、爬升）
+- **轨迹列表增强**: 下拉刷新 + 左滑删除 + 确认弹窗
+
+### 10. 首页数据动态化 (已完成)
+- `homeWeatherProvider` 基于当前位置实时获取天气
+- `homeRoutesProvider` 动态加载 Top 2 推荐路线
+- `recentTracksProvider` 展示最近 2 条轨迹记录
+- 所有区块具备 loading / error / empty 状态处理
+
+### 11. 设置页面 (已完成)
+- `/settings` 路由
+- 主题模式切换（跟随系统/浅色/深色），全局实时生效
+- 通知开关
+- 清除所有轨迹数据（带确认）
+- 版本与法律信息展示
+
+### 12. 空回调修复 (已完成)
+- ProfileScreen: 设置入口、编辑、成就、通知、帮助、用户协议、隐私政策
+- MapScreen: 搜索跳转聊天、路线难度筛选
+- RouteDetailScreen: 收藏错误状态提示重试
+
+### 13. 收藏路线列表页面 (已完成)
+- `/favorites` 路由
+- 展示用户收藏的所有路线
+- 支持下拉刷新
+- 空状态引导
+- 点击进入路线详情
+
+### 14. 路线导航 (已完成)
+- 路线详情页"开始导航"调用外部地图应用
+- iOS 优先 Apple Maps，回退 Google Maps
+- Android / Web 使用 Google Maps
+
+### 15. 静态分析与代码质量 (已完成)
+- 修复所有 `flutter analyze` 警告和 info
+- 移除未使用的导入
+- 替换已弃用的 `RadioListTile` 为自定义 `_ThemeModeOption`
+- `pubspec.yaml` 显式声明 `meta` 依赖
+
+### 16. 轨迹真实分享 (已完成)
+- 集成 `share_plus` 插件
+- 轨迹详情页支持分享文本摘要（名称、距离、时长、爬升、日期）
+- 移除"分享功能即将上线"占位弹窗
+
+### 17. 设置页法律信息交互 (已完成)
+- 设置页"用户协议"和"隐私政策"增加可点击弹窗
+- 内容与个人中心保持一致
+
+### 18. 路线真实图片展示 (已完成)
+- 为 8 条北京爬山路线配置 Unsplash 真实风景图片 URL
+- 首页 `_RouteCard` 展示网络封面图（带加载/错误回退）
+- 路线详情页 `SliverAppBar` 顶部展示全宽背景图 + 渐变遮罩
+
+### 19. 识植物快捷入口接入 AI 聊天 (已完成)
+- 首页"识植物"按钮不再显示"即将上线"占位
+- 点击后跳转 AI 聊天并自动发送植物识别提示语
+
+### 20. 个人资料编辑页 (已完成)
+- `/edit-profile` 路由
+- 支持修改昵称和个性签名
+- SharedPreferences 本地持久化
+- ProfileScreen 实时展示最新资料
+
+### 21. 成就徽章系统 (已完成)
+- `/achievements` 路由
+- 8 枚动态徽章：初出茅庐、徒步老手、山野行者、十里长征、跋山涉水、步步高升、攀登者、收藏家
+- 基于轨迹数量、累计距离、累计爬升、收藏数量自动解锁
+- ProfileScreen 显示已获得徽章数量
+
+### 22. 登录流程闭环 (已完成)
+- 路由入口从 `/chat` 改为 `/login`
+- 游客模式直接跳转 `/chat`
+- 设置页增加"退出登录"按钮，带确认弹窗，退出后返回 `/login`
+
+### 23. 地图定位增强 (已完成)
+- `map_screen.dart` 用户位置标记从默认图标替换为自定义样式
+- 半透明外圈 + 实线边框 + 实心中心点，视觉更清晰
+
+### 24. 轨迹海拔剖面图 (已完成)
+- `track_detail_screen.dart` 新增海拔剖面展示
+- 使用 `CustomPaint` + `_ElevationProfilePainter` 绘制填充面积图
+- 显示最低/最高海拔标签
+- 修复 `flutter_map` 的 `Path<LatLng>` 与 `dart:ui` 的 `Path` 命名冲突
+
 ## 任务计划（优先级排序）
 
 | ID | 任务 | 状态 | 依赖 | 优先级 |
 |----|------|------|------|--------|
-| #2 | 路线详情页面实现 | pending | - | **P0** (下一个) |
-| #3 | 路线评价系统 | pending | #2 | P1 |
-| #5 | 天气 API 集成 | pending | - | P1 |
-| #1 | 轨迹记录功能 | pending | #2, #3, #5 | P2 |
-| #4 | 微信小程序适配 | pending | #1, #2, #3, #5 | P3 |
+| #2 | 路线详情页面实现 | **已完成** | - | P0 |
+| #3 | 路线评价系统 | **已完成** | #2 | P1 |
+| #5 | 天气 API 集成 | **已完成** | - | P1 |
+| #1 | 轨迹记录功能 | **已完成** | #2, #3, #5 | P2 |
+| #4 | 微信小程序适配 | **已暂停** | #1, #2, #3, #5 | P3 |
+| #6 | 首页数据动态化 | **已完成** | - | P2 |
+| #7 | 设置页面实现 | **已完成** | - | P2 |
+| #8 | 轨迹列表增强（刷新+删除） | **已完成** | #1 | P2 |
+| #9 | 修复所有空回调占位 | **已完成** | - | P2 |
+| #10 | 地图搜索功能实现 | **已完成** | - | P2 |
+| #11 | 收藏路线列表页面 | **已完成** | - | P2 |
+| #12 | 路线详情页导航功能 | **已完成** | - | P2 |
+| #13 | 设置页法律信息交互 | **已完成** | - | P2 |
+| #14 | 轨迹真实分享功能 | **已完成** | - | P2 |
+| #15 | 修复 flutter analyze 问题 | **已完成** | - | P2 |
+| #16 | 个人资料编辑页 | **已完成** | - | P2 |
+| #17 | 路线真实图片展示 | **已完成** | - | P2 |
+| #18 | 成就徽章系统 | **已完成** | - | P2 |
+| #19 | 识植物接入 AI 聊天 | **已完成** | - | P2 |
+| #20 | 个人资料编辑页 | **已完成** | - | P2 |
+| #21 | 成就徽章系统 | **已完成** | - | P2 |
+| #22 | 登录流程闭环 | **已完成** | - | P2 |
+| #23 | 地图定位增强 | **已完成** | - | P2 |
+| #24 | 轨迹海拔剖面图 | **已完成** | - | P2 |
+| #25 | 修复关键安全和质量问题 | **已完成** | - | P1 |
+| #26 | 补充核心业务的单元测试 | **已完成** | - | P2 |
+| #27 | 拆分超大文件提升可维护性 | **已完成** | - | P2 |
 
 ### 任务详情
 
-**#2 路线详情页面实现** (P0)
-- 创建路线详情页面
-- 展示路线图片、描述、waypoints
-- 显示用户评价和评分
-- 添加导航按钮
+**#25 修复关键安全和质量问题** (P1 - 已完成)
+- 外部地图导航 (`lib/shared/utils/map_launcher.dart`):
+  - Apple Maps URL 从 `http://maps.apple.com` 修正为 `https://maps.apple.com`
+- AI 聊天消息 Markdown 链接安全 (`lib/features/chat/presentation/widgets/chat_bubble.dart`):
+  - 新增 `onTapLink` 回调，使用 `Uri.tryParse` 解析链接
+  - 仅允许 `http` / `https` 协议的外部跳转，拦截 `javascript:`, `file:` 等危险 scheme
+  - 非法链接显示 SnackBar 提示“不支持的链接类型”
+  - **新增 Widget 测试**: `test/widget/features/chat/presentation/widgets/chat_bubble_test.dart`
+    - 验证危险 scheme (`javascript:`) 被拦截并提示
+    - 验证合法 `https` 链接正常放行
+- SQL 注入防护确认:
+  - `track_local_datasource.dart` 使用参数化查询 (`?` 占位符)，无拼接 SQL
+- 密钥管理确认:
+  - `claude_api_service.dart` 使用 `String.fromEnvironment('CLAUDE_API_KEY')`，无硬编码
+  - 天气 API 使用 HTTPS + 60 秒超时
+- 代码质量微调:
+  - `star_rating_widget.dart`: 移除 `onRatingChanged!` 空断言，改用局部变量安全调用
+- `flutter analyze` 无警告，`flutter test` 95 个测试全部通过
 
-**#3 路线评价系统** (P1)
-- 用户评分功能（1-5星）
-- 评论提交
-- 收藏功能
-- 评价数据存储
+**#27 拆分超大文件提升可维护性** (P2 - 已完成)
+- 创建共享工具: `lib/shared/utils/color_utils.dart` (提取 `hexToColor`)
+- 创建共享工具: `lib/shared/utils/date_utils.dart` (提取 `formatDate`)
+- 从 `map_screen.dart` 提取的 Widget:
+  - `MapLocationCard` → `widgets/map_location_card.dart`
+  - `NearbyRouteItem` → `widgets/nearby_route_item.dart`
+  - `RecordingStatusPanel` → `widgets/recording_status_panel.dart`
+- 从 `route_detail_screen.dart` 提取的 Widget:
+  - `DifficultyTag` → `widgets/difficulty_tag.dart`
+  - `RouteImageFallback` → `widgets/route_image_fallback.dart`
+  - `RouteStatsCard` → `widgets/route_stats_card.dart`
+  - `RouteWeatherCard` → `widgets/route_weather_card.dart`
+  - `RouteWarningsCard` → `widgets/route_warnings_card.dart`
+  - `RouteSeasonsCard` → `widgets/route_seasons_card.dart`
+  - `RouteWaypointsList` → `widgets/route_waypoints_list.dart`
+  - `RouteMapPreview` → `widgets/route_map_preview.dart`
+  - `RouteReviewsList` → `widgets/route_reviews_list.dart`
+- 文件行数变化:
+  - `map_screen.dart`: 852 → 632 行
+  - `route_detail_screen.dart`: 797 → 332 行
+  - `lib/` 下最大文件已降至 632 行，无超 800 行文件
+- `flutter analyze` 无警告，`flutter test` 93 个测试全部通过
 
-**#5 天气 API 集成** (P1)
-- 选择天气 API 服务
-- 实时天气查询
-- 出行建议生成
-- 安全提醒（恶劣天气）
-
-**#1 轨迹记录功能** (P2)
-- 实时 GPS 跟踪
-- 轨迹数据存储（SQLite）
-- 轨迹可视化
-- 分享功能
-
-**#4 微信小程序适配** (P3)
-- 评估 Flutter → 小程序方案
-- 功能适配（去除不支持的特性）
-- 微信 API 集成
+**#4 微信小程序适配** (P3 - 已暂停)
+- 用户要求先放一下，待后续再行评估
 
 ## 计划实现功能（旧版）
 
 ### Phase 2: 路线详情增强
-- [ ] 路线详情页面 → **#2**
-- [ ] 路线评价系统 → **#3**
-- [ ] 路线图片展示 → **#2**
-- [ ] 路线导航功能 → **#2**
+- [x] 路线详情页面 → **#2**
+- [x] 路线评价系统 → **#3**
+- [x] 路线图片展示 → **#2**
+- [x] 路线导航功能 → **#2 / #12**
 
 ### Phase 3: 天气集成
-- [ ] 天气 API 集成 → **#5**
-- [ ] 出行建议（基于天气） → **#5**
-- [ ] 安全提醒 → **#5**
+- [x] 天气 API 集成 → **#5**
+- [x] 出行建议（基于天气） → **#5**
+- [x] 安全提醒 → **#5**
 
 ### Phase 4: 轨迹记录
-- [ ] 实时 GPS 跟踪 → **#1**
-- [ ] 轨迹数据存储 → **#1**
-- [ ] 轨迹分享功能 → **#1**
+- [x] 实时 GPS 跟踪 → **#1**
+- [x] 轨迹数据存储 → **#1**
+- [x] 轨迹历史回放 → **#1**
+- [x] 轨迹分享功能（UI 占位，待后端支持） → **#1**
 
 ### Phase 5: 小程序适配
-- [ ] 微信小程序版本 → **#4**
-- [ ] 功能适配 → **#4**
+- [ ] 微信小程序版本 → **#4（已暂停）**
+- [ ] 功能适配 → **#4（已暂停）**
+
+### Phase 6: 体验优化
+- [x] 首页数据动态化 → **#6**
+- [x] 设置页面 → **#7**
+- [x] 轨迹列表增强 → **#8**
+- [x] 修复空回调占位 → **#9**
+- [x] 地图搜索功能 → **#10**
+- [x] 收藏路线列表 → **#11**
+- [x] 路线详情页导航 → **#12**
+- [x] 设置页法律信息交互 → **#13**
+- [x] 轨迹真实分享 → **#14**
+- [x] 修复 flutter analyze 问题 → **#15**
+- [x] 个人资料编辑页 → **#16**
+- [x] 路线真实图片展示 → **#17**
+- [x] 成就徽章系统 → **#18**
+- [x] 识植物接入 AI 聊天 → **#19**
+- [x] 登录流程闭环 → **#22**
+- [x] 地图定位增强 → **#23**
+- [x] 轨迹海拔剖面图 → **#24**
 
 ## 关键文件
 - `lib/features/chat/data/services/claude_api_service.dart` - AI 服务
 - `lib/features/chat/presentation/providers/chat_provider.dart` - 聊天状态管理
+- `lib/features/chat/presentation/screens/chat_screen.dart` - AI 聊天页面（支持初始消息自动发送）
 - `lib/features/hiking/data/models/route_model.dart` - 路线数据模型
-- `lib/features/hiking/data/datasources/route_local_datasource.dart` - 路线数据
+- `lib/features/hiking/data/datasources/route_local_datasource.dart` - 路线数据（含图片 URL）
 - `lib/features/hiking/domain/usecases/route_recommendation_usecase.dart` - 推荐逻辑
 - `lib/shared/services/location_service.dart` - 位置服务
+- `lib/features/tracking/presentation/providers/tracking_provider.dart` - 轨迹记录状态
+- `lib/features/tracking/presentation/screens/track_list_screen.dart` - 轨迹历史列表（含刷新删除）
+- `lib/features/tracking/presentation/screens/track_detail_screen.dart` - 轨迹详情回放（含分享）
+- `lib/features/weather/data/services/weather_api_service.dart` - 天气服务
+- `lib/features/profile/presentation/screens/profile_screen.dart` - 个人中心
+- `lib/features/profile/presentation/screens/settings_screen.dart` - 设置页面
+- `lib/features/profile/presentation/screens/favorites_screen.dart` - 收藏路线列表
+- `lib/features/profile/presentation/screens/edit_profile_screen.dart` - 编辑资料页
+- `lib/features/profile/presentation/screens/achievements_screen.dart` - 成就徽章页
+- `lib/features/profile/presentation/providers/settings_provider.dart` - 设置状态
+- `lib/features/profile/presentation/providers/profile_provider.dart` - 用户资料状态
+- `lib/features/profile/presentation/providers/achievements_provider.dart` - 成就徽章状态
+- `lib/features/hiking/presentation/screens/home_screen.dart` - 首页（动态数据）
+- `lib/features/hiking/presentation/screens/map_screen.dart` - 地图（搜索+筛选）
+- `lib/features/hiking/presentation/screens/route_detail_screen.dart` - 路线详情（含导航）
+- `lib/shared/utils/map_launcher.dart` - 外部地图启动工具
+
+## 测试覆盖
+- 单元测试: `test/unit/features/tracking/data/datasources/track_local_datasource_test.dart`
+- 单元测试: `test/unit/features/tracking/presentation/providers/tracking_provider_test.dart`
+- 单元测试: `test/unit/features/hiking/data/datasources/review_local_datasource_test.dart`
+- 单元测试: `test/unit/features/weather/data/services/weather_api_service_test.dart`
+- Widget 测试: `test/widget/presentation/screens/route_detail_screen_test.dart`
+- Widget 测试: `test/widget/features/chat/presentation/widgets/chat_bubble_test.dart`（链接安全验证）
+- 全部测试通过: `flutter test` (95 个测试)
+
+## 循环优化记录
+
+### #28 代码质量小优化 (2026-04-15 - 已完成)
+- `star_rating_widget.dart`:
+  - 移除 `onRatingChanged!(...)` 中的 `!` 空断言操作符
+  - 改为局部变量 + null 检查，更符合 Dart 空安全最佳实践
+- `chat_bubble.dart`:
+  - 新增 Widget 测试覆盖 Markdown 链接的安全校验（危险 scheme 拦截 + 正常 https 放行）
+- `flutter analyze` 无警告，`flutter test` 95 个测试全部通过
+
+### 循环状态
+所有计划内任务（#1-#27，除暂停的 #4）均已完成。代码库当前状态：
+- 功能完整，所有核心流程可跑通
+- 无静态分析警告
+- 95 个单元/Widget 测试全部通过
+- 安全基线已加固（HTTPS、URL 校验、参数化 SQL、无硬编码密钥）
+- 文件大小控制在 800 行以内
+- 待评估：`flutter_markdown` 已 discontinued（当前功能正常，可后续评估迁移到 `flutter_markdown_plus`）
 
 ## 用户偏好记录
 - 目标用户: 休闲徒步者

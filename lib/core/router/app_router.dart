@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,13 +8,19 @@ import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 import 'package:hiking_assistant/features/hiking/presentation/screens/home_screen.dart';
 import 'package:hiking_assistant/features/hiking/presentation/screens/map_screen.dart';
 import 'package:hiking_assistant/features/hiking/presentation/screens/route_detail_screen.dart';
+import 'package:hiking_assistant/features/profile/presentation/screens/achievements_screen.dart';
+import 'package:hiking_assistant/features/profile/presentation/screens/edit_profile_screen.dart';
+import 'package:hiking_assistant/features/profile/presentation/screens/favorites_screen.dart';
 import 'package:hiking_assistant/features/profile/presentation/screens/profile_screen.dart';
+import 'package:hiking_assistant/features/profile/presentation/screens/settings_screen.dart';
+import 'package:hiking_assistant/features/tracking/presentation/screens/track_detail_screen.dart';
+import 'package:hiking_assistant/features/tracking/presentation/screens/track_list_screen.dart';
 import 'package:hiking_assistant/shared/widgets/app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/chat',
-    debugLogDiagnostics: true,
+    initialLocation: '/login',
+    debugLogDiagnostics: kDebugMode,
     routes: [
       // 登录页
       GoRoute(
@@ -35,6 +42,51 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return RouteDetailScreen(route: route);
         },
+      ),
+
+      // 轨迹列表页
+      GoRoute(
+        path: '/tracks',
+        name: 'trackList',
+        builder: (context, state) => const TrackListScreen(),
+      ),
+
+      // 轨迹详情页
+      GoRoute(
+        path: '/track/:id',
+        name: 'trackDetail',
+        builder: (context, state) {
+          final trackId = state.pathParameters['id']!;
+          return TrackDetailScreen(trackId: trackId);
+        },
+      ),
+
+      // 设置页
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+
+      // 收藏路线页
+      GoRoute(
+        path: '/favorites',
+        name: 'favorites',
+        builder: (context, state) => const FavoritesScreen(),
+      ),
+
+      // 编辑资料页
+      GoRoute(
+        path: '/edit-profile',
+        name: 'editProfile',
+        builder: (context, state) => const EditProfileScreen(),
+      ),
+
+      // 成就徽章页
+      GoRoute(
+        path: '/achievements',
+        name: 'achievements',
+        builder: (context, state) => const AchievementsScreen(),
       ),
 
       // 主应用 Shell
@@ -63,8 +115,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/chat',
             name: 'chat',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ChatScreen(),
+            pageBuilder: (context, state) => NoTransitionPage(
+              child: ChatScreen(
+                initialMessage: state.uri.queryParameters['message'],
+              ),
             ),
           ),
 

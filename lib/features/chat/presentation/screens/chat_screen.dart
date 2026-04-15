@@ -8,7 +8,9 @@ import 'package:hiking_assistant/features/chat/presentation/widgets/input_bar.da
 import 'package:hiking_assistant/features/chat/presentation/widgets/quick_replies.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key});
+  final String? initialMessage;
+
+  const ChatScreen({super.key, this.initialMessage});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -16,6 +18,20 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
+  bool _initialMessageSent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialMessage != null && widget.initialMessage!.trim().isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_initialMessageSent && mounted) {
+          _initialMessageSent = true;
+          ref.read(chatNotifierProvider.notifier).sendMessage(widget.initialMessage!);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 import 'package:hiking_assistant/features/hiking/presentation/screens/route_detail_screen.dart';
 
@@ -40,14 +42,20 @@ void main() {
     reviewCount: 1234,
   );
 
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('RouteDetailScreen displays route information',
       (WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: RouteDetailScreen(route: testRoute),
+      const ProviderScope(
+        child: MaterialApp(
+          home: RouteDetailScreen(route: testRoute),
+        ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     // Verify route name is displayed
     expect(find.text('香山公园-亲子线'), findsOneWidget);
@@ -85,21 +93,28 @@ void main() {
     // Verify action buttons
     expect(find.text('收藏'), findsOneWidget);
     expect(find.text('开始导航'), findsOneWidget);
+
+    // Verify review section
+    expect(find.text('用户评价'), findsOneWidget);
+    expect(find.text('写评价'), findsOneWidget);
   });
 
   testWidgets('RouteDetailScreen scrolls to show all content',
       (WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: RouteDetailScreen(route: testRoute),
+      const ProviderScope(
+        child: MaterialApp(
+          home: RouteDetailScreen(route: testRoute),
+        ),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     // Scroll down to find the map section
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('路线地图'), findsOneWidget);
   });
+
 }

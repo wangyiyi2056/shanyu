@@ -10,7 +10,7 @@ class ClaudeAPIService {
 
   // 本地 API 配置
   static const String _apiUrl = 'http://127.0.0.1:8000/v1/chat/completions';
-  static const String _apiKey = '123456';
+  static const String _apiKey = String.fromEnvironment('CLAUDE_API_KEY', defaultValue: '');
   static const String _model = 'gemma-4-e4b-it-8bit';
 
   /// 发送消息
@@ -77,7 +77,7 @@ class ClaudeAPIService {
         debugPrint('[LocalAPI] Error: ${response.statusCode} - ${response.body}');
         return _getDemoResponse(userMessage);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('[LocalAPI] Exception: $e');
       return _getDemoResponse(userMessage);
     }
@@ -102,7 +102,7 @@ class ClaudeAPIService {
 
       // 如果解析失败，返回默认响应
       return _getDemoResponse('请稍后');
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('[LocalAPI] Parse error: $e');
       return _getDemoResponse('请稍后');
     }

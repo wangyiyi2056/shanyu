@@ -5,16 +5,14 @@ import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 class RouteLocalDatasource {
   /// 获取所有路线
   Future<List<HikingRoute>> getAllRoutes() async {
+    await Future.delayed(const Duration(milliseconds: 100));
     return _sampleRoutes;
   }
 
   /// 根据 ID 获取路线
   Future<HikingRoute?> getRouteById(String id) async {
-    try {
-      return _sampleRoutes.firstWhere((route) => route.id == id);
-    } catch (_) {
-      return null;
-    }
+    await Future.delayed(const Duration(milliseconds: 50));
+    return _sampleRoutes.where((route) => route.id == id).firstOrNull;
   }
 
   /// 根据地名搜索路线
@@ -42,6 +40,21 @@ class RouteLocalDatasource {
     double? maxDistance,
     List<String>? requiredTags,
   }) async {
+    return recommendRoutesSync(
+      preferredDifficulty: preferredDifficulty,
+      maxDuration: maxDuration,
+      maxDistance: maxDistance,
+      requiredTags: requiredTags,
+    );
+  }
+
+  /// 同步推荐路线
+  List<HikingRoute> recommendRoutesSync({
+    String? preferredDifficulty,
+    int? maxDuration,
+    double? maxDistance,
+    List<String>? requiredTags,
+  }) {
     var routes = _sampleRoutes.toList();
 
     // 按难度筛选
@@ -112,6 +125,7 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['春季', '秋季'],
     rating: 4.5,
     reviewCount: 1234,
+    imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
   ),
   const HikingRoute(
     id: '2',
@@ -135,6 +149,7 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['春季', '秋季'],
     rating: 4.6,
     reviewCount: 2345,
+    imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
   ),
   const HikingRoute(
     id: '3',
@@ -157,6 +172,7 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['春季', '夏季', '秋季'],
     rating: 4.3,
     reviewCount: 876,
+    imageUrl: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80',
   ),
   const HikingRoute(
     id: '4',
@@ -180,6 +196,7 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['春季', '秋季'],
     rating: 4.7,
     reviewCount: 1567,
+    imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80',
   ),
   const HikingRoute(
     id: '5',
@@ -202,6 +219,7 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['夏季', '秋季'],
     rating: 4.4,
     reviewCount: 654,
+    imageUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80',
   ),
   const HikingRoute(
     id: '6',
@@ -225,6 +243,7 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['夏季', '秋季'],
     rating: 4.8,
     reviewCount: 432,
+    imageUrl: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=800&q=80',
   ),
   const HikingRoute(
     id: '7',
@@ -247,6 +266,7 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['春季', '秋季'],
     rating: 4.5,
     reviewCount: 1876,
+    imageUrl: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800&q=80',
   ),
   const HikingRoute(
     id: '8',
@@ -269,5 +289,6 @@ final List<HikingRoute> _sampleRoutes = [
     bestSeasons: ['夏季'],
     rating: 4.2,
     reviewCount: 987,
+    imageUrl: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=800&q=80',
   ),
 ];

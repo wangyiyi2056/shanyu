@@ -33,7 +33,7 @@ class LocationService {
       }
 
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('[Location] Permission check error: $e');
       return false;
     }
@@ -68,7 +68,7 @@ class LocationService {
         longitude: position.longitude,
         address: address,
       );
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('[Location] Error getting location: $e');
       return LocationResult.fallback(
         latitude: 39.9042,
@@ -104,7 +104,7 @@ class LocationService {
         longitude: 116.4074,
         address: '北京市',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('[Location] Search error: $e');
       return LocationResult.fallback(
         latitude: 39.9042,
@@ -142,7 +142,7 @@ class LocationService {
       }
 
       return '未知位置';
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('[Location] Reverse geocode error: $e');
       return '未知位置';
     }

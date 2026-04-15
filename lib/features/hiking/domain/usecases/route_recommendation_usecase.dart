@@ -81,7 +81,28 @@ class RouteRecommendationUseCase {
       maxDistance: preferences.maxDistance,
       requiredTags: preferences.requiredTags,
     );
+    return _buildRecommendations(routes, preferences, limit);
+  }
 
+  /// 同步推荐路线（用于本地数据直接加载）
+  List<RouteRecommendation> getRecommendationsSync({
+    required RoutePreferences preferences,
+    int limit = 5,
+  }) {
+    final routes = _datasource.recommendRoutesSync(
+      preferredDifficulty: preferences.preferredDifficulty,
+      maxDuration: preferences.maxDuration,
+      maxDistance: preferences.maxDistance,
+      requiredTags: preferences.requiredTags,
+    );
+    return _buildRecommendations(routes, preferences, limit);
+  }
+
+  List<RouteRecommendation> _buildRecommendations(
+    List<HikingRoute> routes,
+    RoutePreferences preferences,
+    int limit,
+  ) {
     // 如果有用户位置，按距离排序
     List<HikingRoute> sortedRoutes = routes;
     if (preferences.userLatitude != null && preferences.userLongitude != null) {

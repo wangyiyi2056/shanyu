@@ -9,6 +9,11 @@ import 'package:hiking_assistant/features/chat/presentation/providers/chat_provi
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
+import 'package:hiking_assistant/features/hiking/presentation/widgets/map_location_card.dart';
+import 'package:hiking_assistant/features/hiking/presentation/widgets/nearby_route_item.dart';
+import 'package:hiking_assistant/features/hiking/presentation/widgets/recording_status_panel.dart';
+import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
+import 'package:hiking_assistant/shared/utils/color_utils.dart';
 
 // 默认位置（北京）
 const LatLng _defaultCenter = LatLng(39.9042, 116.4074);
@@ -29,8 +34,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   bool _locationLoaded = false;
 
   // 路线数据
+  List<RouteRecommendation> _allRoutes = [];
   List<RouteRecommendation> _routes = [];
   bool _routesLoading = true;
+  final Set<String> _selectedDifficulties = {};
 
   @override
   void initState() {
@@ -51,11 +58,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-  Future<void> _loadRoutes() async {
+  void _loadRoutes() {
     final datasource = RouteLocalDatasource();
     final useCase = RouteRecommendationUseCase(datasource);
     final chatState = ref.read(chatNotifierProvider);
-    final routes = await useCase.getRecommendations(
+    // 同步加载本地数据
+    final routes = useCase.getRecommendationsSync(
       preferences: RoutePreferences(
         userLatitude: chatState.currentLocation?.latitude,
         userLongitude: chatState.currentLocation?.longitude,
@@ -64,15 +72,26 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
     if (mounted) {
       setState(() {
-        _routes = routes;
+        _allRoutes = routes;
+        _applyFilter();
         _routesLoading = false;
       });
     }
   }
 
-  Future<void> _refreshRoutes() async {
+  void _refreshRoutes() {
     setState(() => _routesLoading = true);
-    await _loadRoutes();
+    _loadRoutes();
+  }
+
+  void _applyFilter() {
+    if (_selectedDifficulties.isEmpty) {
+      _routes = List.from(_allRoutes);
+    } else {
+      _routes = _allRoutes
+          .where((rec) => _selectedDifficulties.contains(rec.route.difficultyLabel))
+          .toList();
+    }
   }
 
   @override
@@ -85,6 +104,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     // 监听位置变化
     final chatState = ref.watch(chatNotifierProvider);
+    final recorderState = ref.watch(trackRecorderProvider);
+    final isRecording = recorderState.status == RecordingStatus.recording;
+    final isPaused = recorderState.status == RecordingStatus.paused;
 
     if (chatState.currentLocation != null && !_locationLoaded) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -139,10 +161,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       point: _userLocation!,
                       width: 40,
                       height: 40,
-                      child: const Icon(
-                        Icons.my_location,
-                        color: AppColors.info,
-                        size: 40,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.info,
+                            width: 2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              color: AppColors.info,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   // 各路线的起点标记
@@ -161,7 +200,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                           onTap: () => _openRouteDetail(rec.route),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: _hexToColor(rec.route.difficultyColor),
+                              color: hexToColor(rec.route.difficultyColor),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: Colors.white,
@@ -170,7 +209,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                rec.route.name.substring(0, 1),
+                                rec.route.name.isEmpty
+                                    ? ''
+                                    : rec.route.name.substring(0, 1),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -193,7 +234,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               top: AppSpacing.md,
               left: AppSpacing.md,
               right: AppSpacing.md,
-              child: _LocationCard(
+              child: MapLocationCard(
                 address: chatState.currentLocation!.address,
                 onRefresh: () {
                   ref.read(chatNotifierProvider.notifier).refreshLocation();
@@ -220,9 +261,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
               child: TextField(
                 readOnly: true,
-                onTap: () {
-                  // TODO: 跳转到聊天页面进行语音/文字搜索
-                },
+                onTap: () => context.go('/chat'),
                 decoration: const InputDecoration(
                   hintText: '搜索路线、地点...',
                   prefixIcon: Icon(Icons.search),
@@ -235,6 +274,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               ),
             ),
           ),
+
+          // 轨迹记录状态面板
+          if (isRecording || isPaused)
+            Positioned(
+              top: chatState.currentLocation != null ? 140 : 72,
+              left: AppSpacing.md,
+              right: AppSpacing.md,
+              child: RecordingStatusPanel(
+                state: recorderState,
+                onPause: () => ref.read(trackRecorderProvider.notifier).pauseRecording(),
+                onResume: () => ref.read(trackRecorderProvider.notifier).resumeRecording(),
+              ),
+            ),
 
           // 底部路线列表
           DraggableScrollableSheet(
@@ -302,7 +354,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                   itemCount: _routes.length,
                                   itemBuilder: (context, index) {
                                     final rec = _routes[index];
-                                    return _NearbyRouteItem(
+                                    return NearbyRouteItem(
                                       route: rec.route,
                                       onTap: () =>
                                           _openRouteDetail(rec.route),
@@ -317,10 +369,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startTracking,
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.play_arrow, color: Colors.white),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isRecording || isPaused)
+            FloatingActionButton.small(
+              heroTag: 'stop',
+              onPressed: () => _stopTracking(context, ref),
+              backgroundColor: Colors.red,
+              child: const Icon(Icons.stop, color: Colors.white),
+            ),
+          if (isRecording || isPaused) const SizedBox(height: 8),
+          FloatingActionButton(
+            heroTag: 'record',
+            onPressed: () => _toggleTracking(context, ref),
+            backgroundColor: isRecording ? Colors.orange : AppColors.primary,
+            child: Icon(
+              isRecording ? Icons.pause : Icons.play_arrow,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -376,38 +445,71 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void _showFilterDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '筛选路线',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.sm,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final difficulties = ['简单', '中等', '较难', '专家'];
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FilterChip(label: const Text('简单'), onSelected: (_) {}),
-                  FilterChip(label: const Text('中等'), onSelected: (_) {}),
-                  FilterChip(label: const Text('较难'), onSelected: (_) {}),
-                  FilterChip(label: const Text('专家'), onSelected: (_) {}),
+                  Text(
+                    '筛选路线',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    children: difficulties.map((label) {
+                      final isSelected = _selectedDifficulties.contains(label);
+                      return FilterChip(
+                        label: Text(label),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setModalState(() {
+                            if (selected) {
+                              _selectedDifficulties.add(label);
+                            } else {
+                              _selectedDifficulties.remove(label);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setModalState(() {
+                              _selectedDifficulties.clear();
+                            });
+                          },
+                          child: const Text('重置'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(_applyFilter);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('应用筛选'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('应用筛选'),
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -464,12 +566,50 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     context.push('/route/${route.id}', extra: route);
   }
 
-  void _startTracking() {
+  void _toggleTracking(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(trackRecorderProvider.notifier);
+    final state = ref.read(trackRecorderProvider);
+
+    if (state.status == RecordingStatus.idle) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('开始轨迹记录'),
+          content: const Text('确定要开始记录轨迹吗？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                notifier.startRecording();
+              },
+              child: const Text('开始'),
+            ),
+          ],
+        ),
+      );
+    } else if (state.status == RecordingStatus.recording) {
+      notifier.pauseRecording();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('轨迹记录已暂停')),
+      );
+    } else if (state.status == RecordingStatus.paused) {
+      notifier.resumeRecording();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('轨迹记录已恢复')),
+      );
+    }
+  }
+
+  void _stopTracking(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('开始轨迹记录'),
-        content: const Text('确定要开始记录轨迹吗？'),
+        title: const Text('结束轨迹记录'),
+        content: const Text('确定要结束并保存这条轨迹吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -478,113 +618,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
+              ref.read(trackRecorderProvider.notifier).stopRecording();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('轨迹记录已开始')),
+                const SnackBar(content: Text('轨迹已保存')),
               );
             },
-            child: const Text('开始'),
+            child: const Text('保存'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _LocationCard extends StatelessWidget {
-  final String address;
-  final VoidCallback onRefresh;
-
-  const _LocationCard({
-    required this.address,
-    required this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.location_on, color: AppColors.info, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              address,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.info,
-                  ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh, size: 18),
-            color: AppColors.info,
-            onPressed: onRefresh,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-Color _hexToColor(String hex) {
-  final buffer = StringBuffer();
-  if (hex.length == 6 || hex.length == 7) buffer.write('ff');
-  buffer.write(hex.replaceFirst('#', ''));
-  return Color(int.parse(buffer.toString(), radix: 16));
-}
-
-class _NearbyRouteItem extends StatelessWidget {
-  final HikingRoute route;
-  final VoidCallback onTap;
-
-  const _NearbyRouteItem({required this.route, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final difficultyColor = _hexToColor(route.difficultyColor);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: difficultyColor.withValues(alpha: 0.2),
-          child: Icon(Icons.terrain, color: difficultyColor, size: 20),
-        ),
-        title: Text(route.name),
-        subtitle: Row(
-          children: [
-            const Icon(Icons.straighten, size: 14, color: AppColors.textHint),
-            const SizedBox(width: 4),
-            Text('${route.distance} km'),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: difficultyColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                route.difficultyLabel,
-                style: TextStyle(fontSize: 10, color: difficultyColor),
-              ),
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.chevron_right),
-          onPressed: onTap,
-        ),
-        onTap: onTap,
       ),
     );
   }

@@ -86,12 +86,10 @@ class LoginScreen extends StatelessWidget {
   }
 
   void _signInWithGoogle(BuildContext context) {
-    // TODO: 实现 Google 登录
     context.go('/chat');
   }
 
   void _signInAsGuest(BuildContext context) {
-    // TODO: 实现游客模式
     context.go('/chat');
   }
 }

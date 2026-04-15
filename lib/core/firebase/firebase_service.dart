@@ -20,7 +20,7 @@ class FirebaseService {
 
       _isInitialized = true;
       debugPrint('[FirebaseService] Running in demo mode');
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('[FirebaseService] Init error: $e');
       _isInitialized = true;
     }

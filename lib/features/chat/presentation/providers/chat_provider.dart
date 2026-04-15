@@ -7,6 +7,8 @@ import 'package:hiking_assistant/features/chat/data/services/claude_api_service.
 import 'package:hiking_assistant/shared/services/location_service.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
 import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
+import 'package:hiking_assistant/features/weather/data/services/weather_api_service.dart';
+import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
 
 // 意图服务 Provider
 final intentServiceProvider = Provider<IntentService>((ref) {
@@ -21,6 +23,11 @@ final claudeAPIServiceProvider = Provider<ClaudeAPIService>((ref) {
 // 位置服务 Provider
 final locationServiceProvider = Provider<LocationService>((ref) {
   return LocationService.instance;
+});
+
+// 天气服务 Provider
+final weatherApiServiceProvider = Provider<WeatherApiService>((ref) {
+  return WeatherApiService.instance;
 });
 
 // 系统提示词
@@ -111,6 +118,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   final ClaudeAPIService _claudeAPI;
   final LocationService _locationService;
   final RouteRecommendationUseCase _routeRecommendationUseCase;
+  final WeatherApiService _weatherApiService;
 
   // 对话历史（用于 Claude API）
   final List<ClaudeMessage> _conversationHistory = [];
@@ -120,10 +128,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required ClaudeAPIService claudeAPI,
     required LocationService locationService,
     required RouteRecommendationUseCase routeRecommendationUseCase,
+    required WeatherApiService weatherApiService,
   })  : _intentService = intentService,
         _claudeAPI = claudeAPI,
         _locationService = locationService,
         _routeRecommendationUseCase = routeRecommendationUseCase,
+        _weatherApiService = weatherApiService,
         super(ChatState.initial()) {
     // 初始化获取位置
     _initLocation();
@@ -199,14 +209,30 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
     }
 
-    // 7. 构建上下文
+    // 7. 获取天气信息（如果涉及天气查询或路线推荐）
+    WeatherData? weatherData;
+    if (intent.category == IntentCategory.weatherQuery ||
+        intent.category == IntentCategory.weatherAlert ||
+        routeRecommendations != null) {
+      try {
+        weatherData = await _weatherApiService.getWeather(
+          location?.latitude ?? 39.9042,
+          location?.longitude ?? 116.4074,
+        );
+      } on Exception catch (_) {
+        weatherData = null;
+      }
+    }
+
+    // 8. 构建上下文
     final contextPrompt = _buildContextPrompt(
       location,
       requestedLocation,
       routeRecommendations,
+      weatherData,
     );
 
-    // 8. 调用 Claude API
+    // 9. 调用 Claude API
     await _callClaudeAPI(content, contextPrompt, requestedLocation);
   }
 
@@ -234,7 +260,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         preferences: preferences,
         limit: 3,
       );
-    } catch (e) {
+    } on Exception catch (_) {
       return [];
     }
   }
@@ -289,6 +315,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     LocationResult? location,
     String? requestedLocation,
     List<RouteRecommendation>? routeRecommendations,
+    WeatherData? weatherData,
   ) {
     final buffer = StringBuffer();
 
@@ -301,6 +328,19 @@ class ChatNotifier extends StateNotifier<ChatState> {
         buffer.writeln('当前位置: ${location.address}');
         buffer.writeln('坐标: ${location.latitude}, ${location.longitude}');
       }
+      buffer.writeln();
+    }
+
+    // 添加天气信息
+    if (weatherData != null) {
+      buffer.writeln('## 当前天气信息');
+      buffer.writeln('${weatherData.iconEmoji} ${weatherData.description}');
+      buffer.writeln('- 当前温度: ${weatherData.temperature.toStringAsFixed(0)}°C');
+      if (weatherData.maxTemp != null && weatherData.minTemp != null) {
+        buffer.writeln('- 最高/最低: ${weatherData.maxTemp!.toStringAsFixed(0)}°C / ${weatherData.minTemp!.toStringAsFixed(0)}°C');
+      }
+      buffer.writeln('- 风速: ${weatherData.windSpeed.toStringAsFixed(0)} km/h');
+      buffer.writeln('- 爬山建议: ${weatherData.hikingAdvice}');
       buffer.writeln();
     }
 
@@ -378,7 +418,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (_conversationHistory.length > 20) {
         _conversationHistory.removeRange(0, _conversationHistory.length - 20);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       // 错误处理
       final errorMessage = Message(
         id: _generateUuid(),
@@ -421,6 +461,7 @@ final chatNotifierProvider =
     claudeAPI: ref.watch(claudeAPIServiceProvider),
     locationService: ref.watch(locationServiceProvider),
     routeRecommendationUseCase: ref.watch(routeRecommendationUseCaseProvider),
+    weatherApiService: ref.watch(weatherApiServiceProvider),
   );
 });
 

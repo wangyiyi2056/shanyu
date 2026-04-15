@@ -34,10 +34,25 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
+  # 本地存储
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.2
+  path: ^1.9.0
+
+  # URL 启动
+  url_launcher: ^6.2.5
+
+  # 分享
+  share_plus: ^10.0.0
+
+  # 元数据注解
+  meta: ^1.11.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  sqflite_common_ffi: ^2.3.2
 
 flutter:
   uses-material-design: true

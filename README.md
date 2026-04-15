@@ -13,6 +13,7 @@
 - 本地 API 集成（支持 OpenAI 格式）
 - 意图识别 + 快速响应
 - Demo 模式 fallback
+- 天气上下文集成
 
 ### 位置服务 ✅
 - GPS 定位
@@ -23,17 +24,39 @@
 - OpenStreetMap（无需 API Key）
 - 路线可视化
 - 用户位置标记
+- 实时轨迹记录与展示
+
+### 路线详情与评价 ✅
+- 路线图片、描述、waypoints 展示
+- 用户评分与评论
+- 收藏功能
+- 实时天气卡片
+
+### 天气集成 ✅
+- Open-Meteo 免费天气 API
+- 实时天气与 3 日预报
+- 出行建议与安全提醒
+
+### 轨迹记录 ✅
+- 实时 GPS 跟踪
+- SQLite 本地存储
+- 暂停/恢复/停止记录
+- 轨迹历史列表与详情
+- 轨迹地图回放
 
 ## 技术栈
 
 | 技术 | 用途 |
 |------|------|
-| Flutter 3.41.6 | 跨平台移动开发 |
+| Flutter 3.x | 跨平台移动开发 |
 | Riverpod | 状态管理 |
 | flutter_map | 地图展示 |
 | Geolocator | GPS 定位 |
 | Geocoding | 地理编码 |
+| sqflite | 轨迹本地存储 |
+| shared_preferences | 评价与收藏本地存储 |
 | GoRouter | 路由管理 |
+| Open-Meteo | 免费天气 API |
 
 ## 项目结构
 
@@ -45,11 +68,19 @@ lib/
 │   │   ├── data/services/claude_api_service.dart
 │   │   ├── domain/services/intent_service.dart
 │   │   └── presentation/providers/chat_provider.dart
-│   └── hiking/     # 爬山路线
+│   ├── hiking/     # 爬山路线
 │   │   ├── data/models/route_model.dart
 │   │   ├── data/datasources/route_local_datasource.dart
 │   │   ├── domain/usecases/route_recommendation_usecase.dart
 │   │   └── presentation/screens/map_screen.dart
+│   ├── tracking/   # 轨迹记录
+│   │   ├── data/models/track_model.dart
+│   │   ├── data/datasources/track_local_datasource.dart
+│   │   ├── presentation/providers/tracking_provider.dart
+│   │   └── presentation/screens/
+│   └── weather/    # 天气服务
+│       ├── data/services/weather_api_service.dart
+│       └── data/models/weather_model.dart
 └── shared/         # 共享服务
     └── services/location_service.dart
 ```
@@ -85,17 +116,17 @@ flutter run -d macos
 
 ## 任务计划
 
-| 优先级 | 任务 | 说明 |
-|--------|------|------|
-| **P0** | 路线详情页面 | 展示路线完整信息、图片、导航按钮 |
-| P1 | 路线评价系统 | 用户评分、评论、收藏功能 |
-| P1 | 天气 API 集成 | 实时天气、出行建议、安全提醒 |
-| P2 | 轨迹记录 | GPS 跟踪、轨迹存储、分享 |
-| P3 | 微信小程序 | 平台适配、功能裁剪 |
+| 优先级 | 任务 | 状态 | 说明 |
+|--------|------|------|------|
+| **P0** | 路线详情页面 | ✅ | 展示路线完整信息、图片、导航按钮 |
+| P1 | 路线评价系统 | ✅ | 用户评分、评论、收藏功能 |
+| P1 | 天气 API 集成 | ✅ | 实时天气、出行建议、安全提醒 |
+| P2 | 轨迹记录 | ✅ | GPS 跟踪、轨迹存储、历史回放 |
+| P3 | 微信小程序 | ⏸️ | 平台适配、功能裁剪（已暂停） |
 
 ## 未来规划
 
-- Phase 2: 路线详情页面 + 评价系统
-- Phase 3: 天气 API 集成 + 出行建议
-- Phase 4: 轨迹记录功能
-- Phase 5: 微信小程序适配
+- Phase 2: 路线详情页面 + 评价系统 ✅
+- Phase 3: 天气 API 集成 + 出行建议 ✅
+- Phase 4: 轨迹记录功能 ✅
+- Phase 5: 微信小程序适配 ⏸️

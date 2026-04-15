@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 import 'package:hiking_assistant/features/chat/domain/entities/message.dart';
@@ -70,6 +71,7 @@ class ChatBubble extends StatelessWidget {
                   MarkdownBody(
                     data: message.content,
                     selectable: true,
+                    onTapLink: (text, href, title) => _handleLinkTap(context, href),
                     styleSheet: MarkdownStyleSheet(
                       p: TextStyle(
                         fontSize: 15,
@@ -160,5 +162,20 @@ class ChatBubble extends StatelessWidget {
     final hour = time.hour.toString().padLeft(2, '0');
     final minute = time.minute.toString().padLeft(2, '0');
     return '$hour:$minute';
+  }
+
+  void _handleLinkTap(BuildContext context, String? href) {
+    if (href == null) return;
+    final uri = Uri.tryParse(href);
+    if (uri == null ||
+        (uri.scheme != 'http' && uri.scheme != 'https')) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('不支持的链接类型')),
+        );
+      }
+      return;
+    }
+    launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
