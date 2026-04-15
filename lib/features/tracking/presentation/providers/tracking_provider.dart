@@ -136,9 +136,10 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
 
       // 启动计时器
       _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (_recordingStartTime != null) {
+        final startTime = _recordingStartTime;
+        if (startTime != null) {
           state = state.copyWith(
-            elapsed: DateTime.now().difference(_recordingStartTime!),
+            elapsed: DateTime.now().difference(startTime),
           );
         }
       });
@@ -240,9 +241,10 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
   Future<void> resumeRecording() async {
     _positionSubscription?.resume();
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_recordingStartTime != null) {
+      final startTime = _recordingStartTime;
+      if (startTime != null) {
         state = state.copyWith(
-          elapsed: DateTime.now().difference(_recordingStartTime!),
+          elapsed: DateTime.now().difference(startTime),
         );
       }
     });
@@ -258,8 +260,9 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
 
     final track = state.currentTrack;
     if (track != null) {
-      final duration = _recordingStartTime != null
-          ? DateTime.now().difference(_recordingStartTime!).inSeconds
+      final startTime = _recordingStartTime;
+      final duration = startTime != null
+          ? DateTime.now().difference(startTime).inSeconds
           : 0;
 
       final finalTrack = track.copyWith(

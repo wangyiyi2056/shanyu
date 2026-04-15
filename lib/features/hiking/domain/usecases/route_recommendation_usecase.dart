@@ -105,11 +105,13 @@ class RouteRecommendationUseCase {
   ) {
     // 如果有用户位置，按距离排序
     List<HikingRoute> sortedRoutes = routes;
-    if (preferences.userLatitude != null && preferences.userLongitude != null) {
+    final userLatitude = preferences.userLatitude;
+    final userLongitude = preferences.userLongitude;
+    if (userLatitude != null && userLongitude != null) {
       sortedRoutes = _sortByDistance(
         routes,
-        preferences.userLatitude!,
-        preferences.userLongitude!,
+        userLatitude,
+        userLongitude,
       );
     }
 
@@ -241,20 +243,21 @@ class RouteRecommendationUseCase {
     double score = 0.5; // 基础分
 
     // 难度匹配
-    if (prefs.preferredDifficulty != null) {
-      final matchDiff =
-          _matchDifficulty(route.difficulty, prefs.preferredDifficulty!);
+    final preferredDifficulty = prefs.preferredDifficulty;
+    if (preferredDifficulty != null) {
+      final matchDiff = _matchDifficulty(route.difficulty, preferredDifficulty);
       score += matchDiff ? 0.3 : -0.1;
     }
 
     // 时间匹配
-    if (prefs.maxDuration != null &&
-        route.estimatedDuration <= prefs.maxDuration!) {
+    final maxDuration = prefs.maxDuration;
+    if (maxDuration != null && route.estimatedDuration <= maxDuration) {
       score += 0.2;
     }
 
     // 距离匹配
-    if (prefs.maxDistance != null && route.distance <= prefs.maxDistance!) {
+    final maxDistance = prefs.maxDistance;
+    if (maxDistance != null && route.distance <= maxDistance) {
       score += 0.1;
     }
 
@@ -280,16 +283,16 @@ class RouteRecommendationUseCase {
       HikingRoute route, RoutePreferences prefs) {
     final reasons = <String>[];
 
-    if (prefs.preferredDifficulty != null) {
-      final matchDiff =
-          _matchDifficulty(route.difficulty, prefs.preferredDifficulty!);
+    final preferredDifficulty = prefs.preferredDifficulty;
+    if (preferredDifficulty != null) {
+      final matchDiff = _matchDifficulty(route.difficulty, preferredDifficulty);
       if (matchDiff) {
         reasons.add('难度「${route.difficultyLabel}」符合要求');
       }
     }
 
-    if (prefs.maxDuration != null &&
-        route.estimatedDuration <= prefs.maxDuration!) {
+    final maxDuration = prefs.maxDuration;
+    if (maxDuration != null && route.estimatedDuration <= maxDuration) {
       reasons.add('预计时长${route.estimatedDuration}分钟，在您的时间范围内');
     }
 

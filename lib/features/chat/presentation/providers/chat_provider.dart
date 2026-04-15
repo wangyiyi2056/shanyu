@@ -169,12 +169,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
     final intent = _intentService.detectIntent(content);
 
     // 4. 如果是快速响应（本地可处理），直接返回
-    if (intent.isQuickResponse && intent.quickResponse != null) {
+    final quickResponse = intent.quickResponse;
+    if (intent.isQuickResponse && quickResponse != null) {
       final assistantMessage = Message(
         id: _generateUuid(),
         conversationId: state.conversationId,
         role: MessageRole.assistant,
-        content: intent.quickResponse!,
+        content: quickResponse,
         messageType: MessageType.text,
         intent: intent.category.name,
         createdAt: DateTime.now(),

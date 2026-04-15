@@ -68,7 +68,7 @@ class ClaudeAPIService {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
         return _parseOpenAIResponse(data);
       } else {
         return _getDemoResponse(userMessage);

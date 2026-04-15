@@ -22,8 +22,8 @@ class TrackLocalDatasource {
   }
 
   Future<Database> get database async {
-    _database ??= await _initDatabase();
-    return _database!;
+    final db = _database ??= await _initDatabase();
+    return db;
   }
 
   Future<Database> _initDatabase() async {
