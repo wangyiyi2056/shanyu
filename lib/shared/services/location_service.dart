@@ -142,7 +142,7 @@ class LocationResult {
   final String address;
   final bool isSuccess;
 
-  LocationResult({
+  const LocationResult({
     required this.latitude,
     required this.longitude,
     required this.address,
