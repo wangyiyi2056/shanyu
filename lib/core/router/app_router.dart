@@ -34,13 +34,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/route/:id',
         name: 'routeDetail',
         builder: (context, state) {
-          final route = state.extra as HikingRoute?;
-          if (route == null) {
+          final extra = state.extra;
+          if (extra is! HikingRoute) {
             return const Scaffold(
               body: Center(child: Text('路线信息缺失')),
             );
           }
-          return RouteDetailScreen(route: route);
+          return RouteDetailScreen(route: extra);
         },
       ),
 

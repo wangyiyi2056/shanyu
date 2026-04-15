@@ -193,8 +193,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
     // 如果用户指定了地名，进行地理编码
     if (intent.entities.containsKey('location')) {
-      requestedLocation = intent.entities['location'] as String;
-      location = await _locationService.searchLocation(requestedLocation);
+      final locationEntity = intent.entities['location'];
+      if (locationEntity is String) {
+        requestedLocation = locationEntity;
+        location = await _locationService.searchLocation(requestedLocation);
+      }
     }
 
     // 6. 获取路线推荐（如果涉及路线查询）
