@@ -115,6 +115,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (currentLocation != null && !_locationLoaded) {
       final latLng = currentLocation.latLng;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         setState(() {
           _userLocation = latLng;
           _locationLoaded = true;
