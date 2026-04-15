@@ -487,6 +487,27 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 
 - 循环任务 #42-#44 已完成并提交，代码库状态：0 警告、104 测试通过、UUID 生成更高效、无占位测试、本地数据源无人工延迟
 
+### #45 消除 trackDetailProvider 中的 track! 空断言 (2026-04-15 - 已完成)
+- `lib/features/tracking/presentation/providers/tracking_provider.dart`:
+  - 将 `return (track!, points);` 改为显式 null 检查 + `StateError`
+  - 错误信息包含 `trackId`，调试时更容易定位问题
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #46 为 map_screen 的 addPostFrameCallback 增加 mounted 保护 (2026-04-15 - 已完成)
+- `lib/features/hiking/presentation/screens/map_screen.dart`:
+  - 在 `WidgetsBinding.instance.addPostFrameCallback` 回调顶部增加 `if (!mounted) return;`
+  - 防止 widget 卸载后执行 `setState`，符合 Flutter 生命周期最佳实践
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #47 全代码库 dart format 格式化 (2026-04-15 - 已完成)
+- 运行 `dart format .` 格式化 35 个文件
+  - 主要包括 `lib/` 源码和 `test/` 测试文件
+  - 统一 80 字符行宽，无功能变更
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+- 循环任务 #45-#47 已完成并提交，代码库状态：0 警告、104 测试通过、无 `track!`、map_screen 有 mounted 保护、代码风格统一格式化
+- GitHub 推送状态：由于网络超时（`Failed to connect to github.com port 443 after 75000 ms`），最新本地提交（#42-#47）尚未同步到远程，待网络恢复后重试
+
 ## 用户偏好记录
 - 目标用户: 休闲徒步者
 - 技术偏好: Flutter (未来接入小程序)
