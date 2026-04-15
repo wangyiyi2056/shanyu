@@ -3,7 +3,12 @@ import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 
 class QuickReplies extends StatelessWidget {
-  const QuickReplies({super.key});
+  final Function(String)? onReplySelected;
+
+  const QuickReplies({
+    super.key,
+    this.onReplySelected,
+  });
 
   static const _replies = [
     '附近有什么山可以爬？',
@@ -24,7 +29,12 @@ class QuickReplies extends StatelessWidget {
         runSpacing: AppSpacing.sm,
         alignment: WrapAlignment.center,
         children: _replies.map((reply) {
-          return _QuickReplyChip(label: reply);
+          return _QuickReplyChip(
+            label: reply,
+            onTap: onReplySelected != null
+                ? () => onReplySelected!(reply)
+                : null,
+          );
         }).toList(),
       ),
     );
@@ -33,31 +43,64 @@ class QuickReplies extends StatelessWidget {
 
 class _QuickReplyChip extends StatelessWidget {
   final String label;
+  final VoidCallback? onTap;
 
-  const _QuickReplyChip({required this.label});
+  const _QuickReplyChip({
+    required this.label,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
-      color: Theme.of(context).brightness == Brightness.light
-          ? AppColors.surfaceVariant
-          : AppColors.darkSurfaceVariant,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        onTap: () {
-          // 通过回调传递点击的快捷回复
-          // 这个需要在父组件中处理
-        },
+        onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [
+                      AppColors.darkSurfaceVariant,
+                      AppColors.darkSurface,
+                    ]
+                  : [
+                      AppColors.surface,
+                      AppColors.surfaceVariant,
+                    ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.darkSurfaceElevated
+                  : AppColors.primaryLighter,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowLight.withValues(alpha: 0.4),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.primary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
           ),
         ),
