@@ -505,6 +505,51 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
   - 统一 80 字符行宽，无功能变更
 - `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
 
+### #48 用类型检查替代不安全 as 强转 (chat_provider) (2026-04-15 - 已完成)
+- `lib/features/chat/presentation/providers/chat_provider.dart`:
+  - 将 `intent.entities['location'] as String` 改为 `is String` 安全检查
+  - 避免实体值非 String 时触发运行时异常
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #49 用类型检查替代不安全 as 强转 (app_router) (2026-04-15 - 已完成)
+- `lib/core/router/app_router.dart`:
+  - 将 `state.extra as HikingRoute?` 改为 `extra is! HikingRoute`
+  - 路由参数类型错误时优雅降级为错误页面，不再抛出 ClassCastException
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #50 为 ListView.builder 列表项添加 ValueKey 提升 diff 性能 (2026-04-15 - 已完成)
+- `lib/features/profile/presentation/screens/favorites_screen.dart`:
+  - 为 `_FavoriteRouteCard` 添加 `ValueKey(route.id)`
+- `lib/features/hiking/presentation/screens/map_screen.dart`:
+  - 为 `NearbyRouteItem` 添加 `ValueKey(rec.route.id)`
+- `lib/features/chat/presentation/screens/chat_screen.dart`:
+  - 为 `ChatBubble` 添加 `ValueKey(message.id)`
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #51 为 LocationResult 添加 const 构造器 (2026-04-15 - 已完成)
+- `lib/shared/services/location_service.dart`:
+  - `LocationResult` 构造器改为 `const`
+  - 使位置结果对象可在 const 上下文中实例化
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #52 为 ClaudeMessage / ClaudeContent 添加 const 构造器 (2026-04-15 - 已完成)
+- `lib/features/chat/data/services/claude_api_service.dart`:
+  - `ClaudeMessage` 和 `ClaudeContent` 构造器改为 `const`
+  - 这两个纯数据类仅含 String 字段，适合 const 化
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+- 循环任务 #45-#52 已完成并推送 GitHub，代码库状态：0 警告、104 测试通过、无 unsafe cast、列表项带 ValueKey、核心数据类全 const 化
+- 自主循环评估：当前代码库已无重大缺漏，静态分析、测试覆盖、代码风格、类型安全、生命周期管理均已达到高标准，循环进入完成状态
+
+## 用户偏好记录
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #47 全代码库 dart format 格式化 (2026-04-15 - 已完成)
+- 运行 `dart format .` 格式化 35 个文件
+  - 主要包括 `lib/` 源码和 `test/` 测试文件
+  - 统一 80 字符行宽，无功能变更
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
 - 循环任务 #45-#47 已完成并提交，代码库状态：0 警告、104 测试通过、无 `track!`、map_screen 有 mounted 保护、代码风格统一格式化
 - GitHub 推送状态：由于网络超时（`Failed to connect to github.com port 443 after 75000 ms`），最新本地提交（#42-#47）尚未同步到远程，待网络恢复后重试
 
