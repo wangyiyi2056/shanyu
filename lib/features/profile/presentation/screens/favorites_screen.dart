@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
+import 'package:hiking_assistant/shared/utils/color_utils.dart';
 import 'package:hiking_assistant/features/profile/presentation/providers/favorite_routes_provider.dart';
 
 class FavoritesScreen extends ConsumerWidget {
@@ -112,15 +113,6 @@ class _FavoriteRouteCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color get _difficultyColor {
-    return switch (route.difficultyLabel) {
-      '简单' => AppColors.difficultyEasy,
-      '中等' => AppColors.difficultyModerate,
-      '较难' => AppColors.difficultyHard,
-      _ => AppColors.difficultyExpert,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -163,7 +155,7 @@ class _FavoriteRouteCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: _difficultyColor.withValues(alpha: 0.2),
+                            color: hexToColor(route.difficultyColor).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -172,7 +164,7 @@ class _FavoriteRouteCard extends StatelessWidget {
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  color: _difficultyColor,
+                                  color: hexToColor(route.difficultyColor),
                                 ),
                           ),
                         ),

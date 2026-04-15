@@ -10,6 +10,7 @@ import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommend
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
+import 'package:hiking_assistant/shared/utils/color_utils.dart';
 
 /// 首页天气 Provider
 final homeWeatherProvider = FutureProvider<WeatherData>((ref) async {
@@ -377,15 +378,6 @@ class _RouteCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Color get _difficultyColor {
-    return switch (route.difficultyLabel) {
-      '简单' => AppColors.difficultyEasy,
-      '中等' => AppColors.difficultyModerate,
-      '较难' => AppColors.difficultyHard,
-      _ => AppColors.difficultyExpert,
-    };
-  }
-
   Widget _fallbackRouteImage() {
     return Container(
       color: AppColors.primary.withValues(alpha: 0.2),
@@ -451,7 +443,7 @@ class _RouteCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: _difficultyColor.withValues(alpha: 0.2),
+                            color: hexToColor(route.difficultyColor).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -460,7 +452,7 @@ class _RouteCard extends StatelessWidget {
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  color: _difficultyColor,
+                                  color: hexToColor(route.difficultyColor),
                                 ),
                           ),
                         ),
