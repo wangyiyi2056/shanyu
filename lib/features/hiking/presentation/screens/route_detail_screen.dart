@@ -66,6 +66,8 @@ class RouteDetailScreen extends ConsumerWidget {
                         Image.network(
                           route.imageUrl,
                           fit: BoxFit.cover,
+                          cacheWidth: 1200,
+                          cacheHeight: 720,
                           errorBuilder: (_, __, ___) =>
                               const RouteImageFallback(),
                         ),

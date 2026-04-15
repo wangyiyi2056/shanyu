@@ -49,6 +49,8 @@ class LoginScreen extends StatelessWidget {
                     'https://www.google.com/favicon.ico',
                     width: 20,
                     height: 20,
+                    cacheWidth: 60,
+                    cacheHeight: 60,
                     errorBuilder: (_, __, ___) => const Icon(Icons.mail),
                   ),
                   label: const Text('使用 Google 登录'),

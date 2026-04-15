@@ -409,6 +409,8 @@ class _RouteCard extends StatelessWidget {
                       ? Image.network(
                           route.imageUrl,
                           fit: BoxFit.cover,
+                          cacheWidth: 240,
+                          cacheHeight: 240,
                           loadingBuilder: (context, child, progress) {
                             if (progress == null) return child;
                             return Container(

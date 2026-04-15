@@ -156,68 +156,72 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
   }
 
   Future<void> _onPositionUpdate(Position position) async {
-    final track = state.currentTrack;
-    if (track == null || state.status != RecordingStatus.recording) return;
+    try {
+      final track = state.currentTrack;
+      if (track == null || state.status != RecordingStatus.recording) return;
 
-    // 频率限制：同步检查并立即更新时间戳，防止并发重叠
-    final lastTime = _lastPointTime;
-    if (lastTime != null) {
-      if (DateTime.now().difference(lastTime) < _minPointInterval) {
-        return;
-      }
-    }
-    _lastPointTime = DateTime.now();
-
-    final point = TrackPoint(
-      id: '${track.id}_${DateTime.now().millisecondsSinceEpoch}',
-      trackId: track.id,
-      latitude: position.latitude,
-      longitude: position.longitude,
-      elevation: position.altitude,
-      timestamp: DateTime.now(),
-      speed: position.speed >= 0 ? position.speed : 0,
-    );
-
-    // 计算距离和海拔变化
-    double newDistance = track.totalDistance;
-    double newElevationGain = track.elevationGain;
-    double newElevationLoss = track.elevationLoss;
-
-    if (state.points.isNotEmpty) {
-      final last = state.points.last;
-      newDistance += _haversineDistance(
-        last.latitude,
-        last.longitude,
-        point.latitude,
-        point.longitude,
-      );
-
-      final lastElevation = last.elevation;
-      final pointElevation = point.elevation;
-      if (lastElevation != null && pointElevation != null) {
-        final diff = pointElevation - lastElevation;
-        if (diff > 0) {
-          newElevationGain += diff;
-        } else {
-          newElevationLoss += diff.abs();
+      // 频率限制：同步检查并立即更新时间戳，防止并发重叠
+      final lastTime = _lastPointTime;
+      if (lastTime != null) {
+        if (DateTime.now().difference(lastTime) < _minPointInterval) {
+          return;
         }
       }
+      _lastPointTime = DateTime.now();
+
+      final point = TrackPoint(
+        id: '${track.id}_${DateTime.now().millisecondsSinceEpoch}',
+        trackId: track.id,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        elevation: position.altitude,
+        timestamp: DateTime.now(),
+        speed: position.speed >= 0 ? position.speed : 0,
+      );
+
+      // 计算距离和海拔变化
+      double newDistance = track.totalDistance;
+      double newElevationGain = track.elevationGain;
+      double newElevationLoss = track.elevationLoss;
+
+      if (state.points.isNotEmpty) {
+        final last = state.points.last;
+        newDistance += _haversineDistance(
+          last.latitude,
+          last.longitude,
+          point.latitude,
+          point.longitude,
+        );
+
+        final lastElevation = last.elevation;
+        final pointElevation = point.elevation;
+        if (lastElevation != null && pointElevation != null) {
+          final diff = pointElevation - lastElevation;
+          if (diff > 0) {
+            newElevationGain += diff;
+          } else {
+            newElevationLoss += diff.abs();
+          }
+        }
+      }
+
+      final updatedTrack = track.copyWith(
+        totalDistance: newDistance,
+        elevationGain: newElevationGain,
+        elevationLoss: newElevationLoss,
+        pointCount: track.pointCount + 1,
+      );
+
+      await _repository.addTrackPoint(point);
+      await _repository.updateTrack(updatedTrack);
+
+      state = state.copyWith(
+        currentTrack: updatedTrack,
+        points: [...state.points, point],
+      );
+    } on Exception catch (e) {
+      state = state.copyWith(error: '位置更新失败: $e');
     }
-
-    final updatedTrack = track.copyWith(
-      totalDistance: newDistance,
-      elevationGain: newElevationGain,
-      elevationLoss: newElevationLoss,
-      pointCount: track.pointCount + 1,
-    );
-
-    await _repository.addTrackPoint(point);
-    await _repository.updateTrack(updatedTrack);
-
-    state = state.copyWith(
-      currentTrack: updatedTrack,
-      points: [...state.points, point],
-    );
   }
 
   /// 暂停记录
