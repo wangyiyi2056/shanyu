@@ -541,6 +541,28 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - 循环任务 #45-#52 已完成并推送 GitHub，代码库状态：0 警告、104 测试通过、无 unsafe cast、列表项带 ValueKey、核心数据类全 const 化
 - 自主循环评估：当前代码库已无重大缺漏，静态分析、测试覆盖、代码风格、类型安全、生命周期管理均已达到高标准，循环进入完成状态
 
+### #53 移除重复的 _difficultyColor getter (2026-04-15 - 已完成)
+- `lib/features/hiking/presentation/screens/home_screen.dart`:
+  - 删除本地 `_difficultyColor` getter，改用现有 `hexToColor(route.difficultyColor)`
+  - 新增 `color_utils.dart` 导入
+- `lib/features/profile/presentation/screens/favorites_screen.dart`:
+  - 同样删除本地 `_difficultyColor` getter，复用 `hexToColor`
+  - 新增 `color_utils.dart` 导入
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+
+### #54 修复空断言、异步签名和 mounted 守卫 (2026-04-15 - 已完成)
+- `lib/core/router/app_router.dart`:
+  - 将 `state.pathParameters['id']!` 替换为 `state.pathParameters['id'] ?? ''`，移除空断言
+- `lib/features/tracking/presentation/providers/tracking_provider.dart`:
+  - `_onPositionUpdate` 返回类型从 `void` 改为 `Future<void>`，避免 async void 反模式
+- `lib/features/tracking/presentation/screens/track_detail_screen.dart`:
+  - `_ElevationProfileChart` 提取 `List<double> elevationValues`（使用 `whereType<double>()`）
+  - `_ElevationProfilePainter` 改为接收 `List<double> elevations`，彻底消除 `p.elevation!` 断言
+- `lib/features/hiking/presentation/screens/route_detail_screen.dart`:
+  - `_showReviewDialog` 在 `await submitReview(...)` 后增加 `if (context.mounted)` 检查，再显示 SnackBar
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+- 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
+
 ## 用户偏好记录
 - `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
 
