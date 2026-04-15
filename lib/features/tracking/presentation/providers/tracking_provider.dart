@@ -155,7 +155,7 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
     );
   }
 
-  void _onPositionUpdate(Position position) async {
+  Future<void> _onPositionUpdate(Position position) async {
     final track = state.currentTrack;
     if (track == null || state.status != RecordingStatus.recording) return;
 

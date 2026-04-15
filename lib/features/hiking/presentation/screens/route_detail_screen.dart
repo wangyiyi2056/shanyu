@@ -328,6 +328,11 @@ class RouteDetailScreen extends ConsumerWidget {
             rating: result['rating'] as double,
             comment: result['comment'] as String,
           );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('评价已提交')),
+        );
+      }
     }
   }
 }

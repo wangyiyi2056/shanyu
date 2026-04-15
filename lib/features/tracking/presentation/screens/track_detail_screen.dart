@@ -434,12 +434,16 @@ class _ElevationProfileChart extends StatelessWidget {
       return const Center(child: Text('海拔数据不足'));
     }
 
-    final minElevation = elevationPoints
-        .map((p) => p.elevation!)
-        .reduce((a, b) => a < b ? a : b);
-    final maxElevation = elevationPoints
-        .map((p) => p.elevation!)
-        .reduce((a, b) => a > b ? a : b);
+    final elevationValues =
+        elevationPoints.map((p) => p.elevation).whereType<double>().toList();
+    if (elevationValues.length < 2) {
+      return const Center(child: Text('海拔数据不足'));
+    }
+
+    final minElevation =
+        elevationValues.reduce((a, b) => a < b ? a : b);
+    final maxElevation =
+        elevationValues.reduce((a, b) => a > b ? a : b);
 
     return Card(
       child: Padding(
@@ -451,7 +455,7 @@ class _ElevationProfileChart extends StatelessWidget {
               child: CustomPaint(
                 size: Size.infinite,
                 painter: _ElevationProfilePainter(
-                  points: elevationPoints,
+                  elevations: elevationValues,
                   minElevation: minElevation,
                   maxElevation: maxElevation,
                   color: AppColors.primary,
@@ -485,14 +489,14 @@ class _ElevationProfileChart extends StatelessWidget {
 }
 
 class _ElevationProfilePainter extends CustomPainter {
-  final List<TrackPoint> points;
+  final List<double> elevations;
   final double minElevation;
   final double maxElevation;
   final Color color;
   final Color fillColor;
 
   _ElevationProfilePainter({
-    required this.points,
+    required this.elevations,
     required this.minElevation,
     required this.maxElevation,
     required this.color,
@@ -501,7 +505,7 @@ class _ElevationProfilePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (points.length < 2) return;
+    if (elevations.length < 2) return;
 
     final padding = const EdgeInsets.only(top: 8, bottom: 4);
     final drawWidth = size.width;
@@ -511,11 +515,11 @@ class _ElevationProfilePainter extends CustomPainter {
     final path = ui.Path();
     final linePath = ui.Path();
 
-    for (var i = 0; i < points.length; i++) {
-      final x = (i / (points.length - 1)) * drawWidth;
+    for (var i = 0; i < elevations.length; i++) {
+      final x = (i / (elevations.length - 1)) * drawWidth;
       final y = padding.top +
           drawHeight -
-          ((points[i].elevation! - minElevation) / range) * drawHeight;
+          ((elevations[i] - minElevation) / range) * drawHeight;
 
       if (i == 0) {
         path.moveTo(x, size.height);
@@ -526,7 +530,7 @@ class _ElevationProfilePainter extends CustomPainter {
         linePath.lineTo(x, y);
       }
 
-      if (i == points.length - 1) {
+      if (i == elevations.length - 1) {
         path.lineTo(x, size.height);
         path.close();
       }

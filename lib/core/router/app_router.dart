@@ -56,7 +56,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/track/:id',
         name: 'trackDetail',
         builder: (context, state) {
-          final trackId = state.pathParameters['id']!;
+          final trackId = state.pathParameters['id'] ?? '';
           return TrackDetailScreen(trackId: trackId);
         },
       ),
