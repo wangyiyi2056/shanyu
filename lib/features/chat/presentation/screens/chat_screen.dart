@@ -52,18 +52,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
+  void _sendMessage(String content) {
+    ref.read(chatNotifierProvider.notifier).sendMessage(content);
+    _scrollToBottom();
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatNotifierProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.terrain, color: AppColors.primary),
-            SizedBox(width: AppSpacing.sm),
-            Text('爬山助手'),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.terrain, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              '爬山助手',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -89,14 +110,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           if (chatState.isLoading) _buildLoadingIndicator(),
 
           // 快捷回复
-          if (chatState.messages.isEmpty) const QuickReplies(),
+          if (chatState.messages.isEmpty)
+            QuickReplies(
+              onReplySelected: _sendMessage,
+            ),
 
           // 输入框
           InputBar(
-            onSend: (content) {
-              ref.read(chatNotifierProvider.notifier).sendMessage(content);
-              _scrollToBottom();
-            },
+            onSend: _sendMessage,
           ),
         ],
       ),
@@ -104,25 +125,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildEmptyState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.terrain,
-            size: 80,
-            color: AppColors.primary.withValues(alpha: 0.5),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              gradient: isDark
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.2),
+                        AppColors.primaryLight.withValues(alpha: 0.1),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : const LinearGradient(
+                      colors: [AppColors.primaryLighter, Color(0xFFE0F2FE)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.terrain,
+              size: 56,
+              color: isDark
+                  ? AppColors.primaryLight
+                  : AppColors.primary,
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.xl),
           Text(
-            '你好，我是爬山助手 🌲',
-            style: Theme.of(context).textTheme.headlineSmall,
+            '你好，我是爬山助手',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.textPrimary,
+                ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             '有什么我可以帮你的吗？',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
                 ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -154,6 +214,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildLoadingIndicator() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
@@ -164,30 +226,116 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: AppColors.aiBubble,
+              color: isDark ? AppColors.darkAiBubble : AppColors.aiBubble,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadowLight.withValues(alpha: 0.5),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.textSecondary,
-                  ),
+                _BouncingDots(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   '思考中...',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
+                      ),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BouncingDots extends StatefulWidget {
+  final Color color;
+
+  const _BouncingDots({required this.color});
+
+  @override
+  State<_BouncingDots> createState() => _BouncingDotsState();
+}
+
+class _BouncingDotsState extends State<_BouncingDots>
+    with TickerProviderStateMixin {
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _animations;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = List.generate(3, (index) {
+      return AnimationController(
+        duration: const Duration(milliseconds: 500),
+        vsync: this,
+      );
+    });
+
+    _animations = _controllers.map((controller) {
+      return Tween<double>(begin: 0, end: -6).animate(
+        CurvedAnimation(parent: controller, curve: Curves.easeInOut),
+      );
+    }).toList();
+
+    _startAnimations();
+  }
+
+  void _startAnimations() {
+    for (var i = 0; i < _controllers.length; i++) {
+      Future.delayed(Duration(milliseconds: i * 120), () {
+        if (!mounted) return;
+        _controllers[i].repeat(reverse: true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (index) {
+        return AnimatedBuilder(
+          animation: _animations[index],
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _animations[index].value),
+              child: child,
+            );
+          },
+          child: Container(
+            width: 6,
+            height: 6,
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            decoration: BoxDecoration(
+              color: widget.color,
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      }),
     );
   }
 }

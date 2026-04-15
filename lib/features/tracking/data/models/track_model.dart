@@ -92,6 +92,21 @@ class HikingTrack {
     }
     return '${totalDistance.toStringAsFixed(0)} m';
   }
+
+  String get formattedDate {
+    final now = DateTime.now();
+    final diff = now.difference(startTime);
+    if (diff.inDays == 0) {
+      return '今天';
+    } else if (diff.inDays == 1) {
+      return '昨天';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}天前';
+    } else if (diff.inDays < 30) {
+      return '${(diff.inDays / 7).floor()}周前';
+    }
+    return '${startTime.month}/${startTime.day}';
+  }
 }
 
 /// 轨迹点模型
