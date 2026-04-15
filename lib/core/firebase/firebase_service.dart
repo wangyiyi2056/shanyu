@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Firebase 服务（简化版，无需实际配置即可运行）
 class FirebaseService {
   FirebaseService._();
@@ -19,9 +17,7 @@ class FirebaseService {
       // );
 
       _isInitialized = true;
-      debugPrint('[FirebaseService] Running in demo mode');
-    } on Exception catch (e) {
-      debugPrint('[FirebaseService] Init error: $e');
+    } on Exception catch (_) {
       _isInitialized = true;
     }
   }

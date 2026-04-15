@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// 本地 OpenAI 兼容 API 服务
@@ -46,10 +45,6 @@ class ClaudeAPIService {
         'content': userMessage,
       });
 
-      debugPrint('[LocalAPI] Sending request to $_apiUrl');
-      debugPrint('[LocalAPI] Model: $_model');
-      debugPrint('[LocalAPI] Messages: ${messages.length}');
-
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {
@@ -71,14 +66,11 @@ class ClaudeAPIService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        debugPrint('[LocalAPI] Response: ${data.toString().substring(0, 200)}...');
         return _parseOpenAIResponse(data);
       } else {
-        debugPrint('[LocalAPI] Error: ${response.statusCode} - ${response.body}');
         return _getDemoResponse(userMessage);
       }
-    } on Exception catch (e) {
-      debugPrint('[LocalAPI] Exception: $e');
+    } on Exception catch (_) {
       return _getDemoResponse(userMessage);
     }
   }
@@ -102,8 +94,7 @@ class ClaudeAPIService {
 
       // 如果解析失败，返回默认响应
       return _getDemoResponse('请稍后');
-    } on Exception catch (e) {
-      debugPrint('[LocalAPI] Parse error: $e');
+    } on Exception catch (_) {
       return _getDemoResponse('请稍后');
     }
   }

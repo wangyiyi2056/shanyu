@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
@@ -14,7 +13,6 @@ class LocationService {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        debugPrint('[Location] Location services are disabled');
         return false;
       }
 
@@ -22,19 +20,16 @@ class LocationService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          debugPrint('[Location] Location permissions are denied');
           return false;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        debugPrint('[Location] Location permissions are permanently denied');
         return false;
       }
 
       return true;
-    } on Exception catch (e) {
-      debugPrint('[Location] Permission check error: $e');
+    } on Exception catch (_) {
       return false;
     }
   }
@@ -61,15 +56,12 @@ class LocationService {
       final latlng = LatLng(position.latitude, position.longitude);
       final address = await _reverseGeocode(latlng);
 
-      debugPrint('[Location] Got location: $latlng, address: $address');
-
       return LocationResult.success(
         latitude: position.latitude,
         longitude: position.longitude,
         address: address,
       );
-    } on Exception catch (e) {
-      debugPrint('[Location] Error getting location: $e');
+    } on Exception catch (_) {
       return LocationResult.fallback(
         latitude: 39.9042,
         longitude: 116.4074,
@@ -81,16 +73,10 @@ class LocationService {
   /// 根据地名查找位置
   Future<LocationResult> searchLocation(String query) async {
     try {
-      debugPrint('[Location] Searching for: $query');
-
       final locations = await locationFromAddress(query);
 
       if (locations.isNotEmpty) {
         final location = locations.first;
-        final latlng = LatLng(location.latitude, location.longitude);
-
-        debugPrint('[Location] Found: $latlng');
-
         return LocationResult.success(
           latitude: location.latitude,
           longitude: location.longitude,
@@ -98,14 +84,12 @@ class LocationService {
         );
       }
 
-      debugPrint('[Location] No results for: $query');
       return LocationResult.fallback(
         latitude: 39.9042,
         longitude: 116.4074,
         address: '北京市',
       );
-    } on Exception catch (e) {
-      debugPrint('[Location] Search error: $e');
+    } on Exception catch (_) {
       return LocationResult.fallback(
         latitude: 39.9042,
         longitude: 116.4074,
@@ -142,8 +126,7 @@ class LocationService {
       }
 
       return '未知位置';
-    } on Exception catch (e) {
-      debugPrint('[Location] Reverse geocode error: $e');
+    } on Exception catch (_) {
       return '未知位置';
     }
   }

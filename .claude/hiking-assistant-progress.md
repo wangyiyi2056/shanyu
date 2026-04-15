@@ -364,6 +364,31 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
   - 无可用地�图应用时返回 false
 - `flutter test` 105 个测试全部通过
 
+### #32 修复 _conversationHistory 可变性问题 (2026-04-15 - 已完成)
+- `lib/features/chat/presentation/providers/chat_provider.dart`:
+  - `_conversationHistory` 从 `final List<ClaudeMessage>` 改为 `List<ClaudeMessage>`
+  - 移除 `.add()` / `.removeRange()` / `.clear()` 等就地修改操作
+  - 改为不可变列表重新赋值模式：`[..._conversationHistory, newMsg]`、`sublist()`、`[]`
+  - 符合项目 immutability 编码规范
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
+### #33 移除所有 debugPrint 并改进错误提示 (2026-04-15 - 已完成)
+- `lib/shared/services/location_service.dart`:
+  - 移除 8 处 `debugPrint`
+  - 移除不再需要的 `flutter/foundation.dart` 导入
+- `lib/features/chat/data/services/claude_api_service.dart`:
+  - 移除 6 处 `debugPrint`
+  - 移除不再需要的 `flutter/foundation.dart` 导入
+- `lib/core/firebase/firebase_service.dart`:
+  - 移除 2 处 `debugPrint`
+  - 移除不再需要的 `flutter/foundation.dart` 导入
+- `lib/features/chat/presentation/widgets/quick_replies.dart`:
+  - 移除 1 处 `debugPrint`
+- `lib/features/chat/presentation/providers/chat_provider.dart`:
+  - API 异常时的用户提示从 `'抱歉，发生了错误: $e\n请稍后再试。'` 改为固定友好文案 `'抱歉，服务暂时不可用，请稍后再试。'`
+  - 避免将底层异常信息直接暴露给终端用户
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
 ### 循环状态
 所有计划内任务（#1-#27，除暂停的 #4）均已完成。代码库当前状态：
 - 功能完整，所有核心流程可跑通
@@ -372,6 +397,7 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - 安全基线已加固（HTTPS、URL 校验、参数化 SQL、无硬编码密钥）
 - 文件大小控制在 800 行以内
 - `flutter_markdown` discontinued 迁移已完成（`flutter_markdown_plus`）
+- 代码库无 `debugPrint`、无就地修改列表、无异常信息泄露给用户
 - 自主循环评估：当前代码库无重大缺漏，可优化项已基本处理完毕，循环进入待机状态
 
 ## 用户偏好记录

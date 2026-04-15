@@ -48,7 +48,6 @@ class _QuickReplyChip extends StatelessWidget {
         onTap: () {
           // 通过回调传递点击的快捷回复
           // 这个需要在父组件中处理
-          debugPrint('Quick reply tapped: $label');
         },
         child: Container(
           padding: const EdgeInsets.symmetric(

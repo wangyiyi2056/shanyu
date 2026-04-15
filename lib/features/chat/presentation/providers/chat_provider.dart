@@ -121,7 +121,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
   final WeatherApiService _weatherApiService;
 
   // 对话历史（用于 Claude API）
-  final List<ClaudeMessage> _conversationHistory = [];
+  List<ClaudeMessage> _conversationHistory = [];
 
   ChatNotifier({
     required IntentService intentService,
@@ -377,9 +377,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
   ) async {
     try {
       // 添加用户消息到历史
-      _conversationHistory.add(
+      _conversationHistory = [
+        ..._conversationHistory,
         ClaudeMessage(role: 'user', content: userContent),
-      );
+      ];
 
       // 构建带有上下文的系统消息
       final fullSystemPrompt = contextPrompt.isNotEmpty
@@ -394,9 +395,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
 
       // 添加助手消息到历史
-      _conversationHistory.add(
+      _conversationHistory = [
+        ..._conversationHistory,
         ClaudeMessage(role: 'assistant', content: response.textContent),
-      );
+      ];
 
       // 创建助手消息
       final assistantMessage = Message(
@@ -416,15 +418,17 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
       // 限制历史长度
       if (_conversationHistory.length > 20) {
-        _conversationHistory.removeRange(0, _conversationHistory.length - 20);
+        _conversationHistory = _conversationHistory.sublist(
+          _conversationHistory.length - 20,
+        );
       }
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       // 错误处理
       final errorMessage = Message(
         id: _generateUuid(),
         conversationId: state.conversationId,
         role: MessageRole.assistant,
-        content: '抱歉，发生了错误: $e\n请稍后再试。',
+        content: '抱歉，服务暂时不可用，请稍后再试。',
         messageType: MessageType.text,
         createdAt: DateTime.now(),
       );
@@ -438,7 +442,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   /// 清除对话
   void clearConversation() {
-    _conversationHistory.clear();
+    _conversationHistory = [];
     state = ChatState.initial();
     // 重新获取位置
     _initLocation();
