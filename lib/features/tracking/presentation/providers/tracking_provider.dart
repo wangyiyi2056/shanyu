@@ -189,8 +189,10 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
         point.longitude,
       );
 
-      if (last.elevation != null && point.elevation != null) {
-        final diff = point.elevation! - last.elevation!;
+      final lastElevation = last.elevation;
+      final pointElevation = point.elevation;
+      if (lastElevation != null && pointElevation != null) {
+        final diff = pointElevation - lastElevation;
         if (diff > 0) {
           newElevationGain += diff;
         } else {

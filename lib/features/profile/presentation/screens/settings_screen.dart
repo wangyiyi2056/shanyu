@@ -204,16 +204,15 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _applyThemeMode(BuildContext context, WidgetRef ref, ThemeMode mode) {
+  Future<void> _applyThemeMode(BuildContext context, WidgetRef ref, ThemeMode mode) async {
     Navigator.of(context).pop();
     final appMode = switch (mode) {
       ThemeMode.light => AppThemeMode.light,
       ThemeMode.dark => AppThemeMode.dark,
       ThemeMode.system => AppThemeMode.system,
     };
-    ref.read(settingsActionsProvider.notifier).setThemeMode(appMode).then((_) {
-      ref.invalidate(themeModeProvider);
-    });
+    await ref.read(settingsActionsProvider.notifier).setThemeMode(appMode);
+    ref.invalidate(themeModeProvider);
   }
 
   void _showLogoutDialog(BuildContext context) {

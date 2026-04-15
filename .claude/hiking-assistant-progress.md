@@ -446,7 +446,26 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - 测试输出无 OpenStreetMap 瓦片加载噪音
 - 自主循环评估：当前代码库无重大缺漏，可优化项已基本处理完毕，循环进入待机状态
 - 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
-- 循环任务 #36-#38 已完成并提交，代码库状态：0 警告、105 测试通过、无 bare catch、无冗余 `!`、无 `dynamic` 误用
+### #39 消除 tracking_provider 海拔计算中的 ! (2026-04-15 - 已完成)
+- `lib/features/tracking/presentation/providers/tracking_provider.dart`:
+  - 将 `point.elevation! - last.elevation!` 改为局部变量 `pointElevation` 和 `lastElevation`
+  - 在 null 检查块内使用无 `!` 的变量进行海拔差计算
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
+### #40 消除 map_screen 中 _userLocation! 空断言 (2026-04-15 - 已完成)
+- `lib/features/hiking/presentation/screens/map_screen.dart`:
+  - 提取 `final userLocation = _userLocation;` 到 `build` 方法顶部
+  - 替换 `_loadUserLocation`、`_centerOnUserLocation`、Marker 构建中的 4 处 `_userLocation!`
+  - 使用局部变量替代，避免冗余空断言
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
+### #41 将 .then 链改为 async/await (2026-04-15 - 已完成)
+- `lib/features/profile/presentation/screens/settings_screen.dart`:
+  - 将 `_applyThemeMode` 中的 `ref.read(...).then((_) { ... })` 改为 `async/await`
+  - 更符合 Dart 异步规范，错误处理路径更清晰
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
+- 循环任务 #36-#41 已完成并提交，代码库状态：0 警告、105 测试通过、无 bare catch、无冗余 `!`、无 `dynamic` 误用、无 `.then` 链
 
 ## 用户偏好记录
 - 目标用户: 休闲徒步者

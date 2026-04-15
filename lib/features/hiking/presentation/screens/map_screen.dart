@@ -51,11 +51,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final chatState = ref.read(chatNotifierProvider);
     final currentLocation = chatState.currentLocation;
     if (currentLocation != null) {
+      final latLng = currentLocation.latLng;
       setState(() {
-        _userLocation = currentLocation.latLng;
+        _userLocation = latLng;
         _locationLoaded = true;
       });
-      _mapController.move(_userLocation!, _defaultZoom);
+      _mapController.move(latLng, _defaultZoom);
     }
   }
 
@@ -110,13 +111,15 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final isPaused = recorderState.status == RecordingStatus.paused;
 
     final currentLocation = chatState.currentLocation;
+    final userLocation = _userLocation;
     if (currentLocation != null && !_locationLoaded) {
+      final latLng = currentLocation.latLng;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          _userLocation = currentLocation.latLng;
+          _userLocation = latLng;
           _locationLoaded = true;
         });
-        _mapController.move(_userLocation!, _defaultZoom);
+        _mapController.move(latLng, _defaultZoom);
         _refreshRoutes();
       });
     }
@@ -159,9 +162,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               MarkerLayer(
                 markers: [
                   // 用户位置
-                  if (_userLocation != null)
+                  if (userLocation != null)
                     Marker(
-                      point: _userLocation!,
+                      point: userLocation,
                       width: 40,
                       height: 40,
                       child: Container(
@@ -398,8 +401,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   void _centerOnUserLocation() {
-    if (_userLocation != null) {
-      _mapController.move(_userLocation!, _defaultZoom);
+    final userLocation = _userLocation;
+    if (userLocation != null) {
+      _mapController.move(userLocation, _defaultZoom);
     } else {
       ref.read(chatNotifierProvider.notifier).refreshLocation();
       ScaffoldMessenger.of(context).showSnackBar(
