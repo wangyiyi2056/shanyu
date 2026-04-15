@@ -407,6 +407,12 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
   - 将 `_database!.close()` 改为局部变量 `db`
 - `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
 
+### #38 消除 track.endTime! 空断言 (2026-04-15 - 已完成)
+- `lib/features/tracking/presentation/screens/track_detail_screen.dart`:
+  - 将 `track.endTime!` 提取为 `build` 方法顶部的局部变量 `endTime`
+  - 在条件渲染中使用无 `!` 的 `endTime`，消除最后一处 UI 层冗余空断言
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
 ### #37 移除 dynamic 类型使用 (2026-04-15 - 已完成)
 - `lib/features/profile/presentation/screens/achievements_screen.dart`:
   - `_AchievementCard` 的 `achievement` 字段类型从 `dynamic` 改为 `Achievement`

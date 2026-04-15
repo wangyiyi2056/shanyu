@@ -82,6 +82,7 @@ class _TrackDetailView extends StatelessWidget {
   Widget build(BuildContext context) {
     final firstElevation = points.firstOrNull?.elevation;
     final lastElevation = points.lastOrNull?.elevation;
+    final endTime = track.endTime;
 
     return Column(
       children: [
@@ -110,10 +111,10 @@ class _TrackDetailView extends StatelessWidget {
                         color: AppColors.textSecondary,
                       ),
                 ),
-                if (track.endTime != null) ...[
+                if (endTime != null) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    '结束时间: ${_formatDate(track.endTime!)}',
+                    '结束时间: ${_formatDate(endTime)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textHint,
                         ),
