@@ -85,9 +85,11 @@ class _ReviewInputDialogState extends State<ReviewInputDialog> {
           TextField(
             controller: _commentController,
             maxLines: 3,
+            maxLength: 200,
             decoration: const InputDecoration(
               hintText: '分享您的徒步体验...',
               border: OutlineInputBorder(),
+              counterText: '',
             ),
           ),
         ],
