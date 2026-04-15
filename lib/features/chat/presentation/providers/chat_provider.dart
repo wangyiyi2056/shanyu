@@ -336,8 +336,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
       buffer.writeln('## 当前天气信息');
       buffer.writeln('${weatherData.iconEmoji} ${weatherData.description}');
       buffer.writeln('- 当前温度: ${weatherData.temperature.toStringAsFixed(0)}°C');
-      if (weatherData.maxTemp != null && weatherData.minTemp != null) {
-        buffer.writeln('- 最高/最低: ${weatherData.maxTemp!.toStringAsFixed(0)}°C / ${weatherData.minTemp!.toStringAsFixed(0)}°C');
+      final maxTemp = weatherData.maxTemp;
+      final minTemp = weatherData.minTemp;
+      if (maxTemp != null && minTemp != null) {
+        buffer.writeln('- 最高/最低: ${maxTemp.toStringAsFixed(0)}°C / ${minTemp.toStringAsFixed(0)}°C');
       }
       buffer.writeln('- 风速: ${weatherData.windSpeed.toStringAsFixed(0)} km/h');
       buffer.writeln('- 爬山建议: ${weatherData.hikingAdvice}');

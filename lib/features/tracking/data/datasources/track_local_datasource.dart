@@ -13,8 +13,9 @@ class TrackLocalDatasource {
 
   @visibleForTesting
   Future<void> closeAndReset() async {
-    if (_database != null) {
-      await _database!.close();
+    final db = _database;
+    if (db != null) {
+      await db.close();
       _database = null;
     }
   }

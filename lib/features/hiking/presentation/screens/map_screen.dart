@@ -49,9 +49,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
   Future<void> _loadUserLocation() async {
     final chatState = ref.read(chatNotifierProvider);
-    if (chatState.currentLocation != null) {
+    final currentLocation = chatState.currentLocation;
+    if (currentLocation != null) {
       setState(() {
-        _userLocation = chatState.currentLocation!.latLng;
+        _userLocation = currentLocation.latLng;
         _locationLoaded = true;
       });
       _mapController.move(_userLocation!, _defaultZoom);
@@ -108,10 +109,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final isRecording = recorderState.status == RecordingStatus.recording;
     final isPaused = recorderState.status == RecordingStatus.paused;
 
-    if (chatState.currentLocation != null && !_locationLoaded) {
+    final currentLocation = chatState.currentLocation;
+    if (currentLocation != null && !_locationLoaded) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          _userLocation = chatState.currentLocation!.latLng;
+          _userLocation = currentLocation.latLng;
           _locationLoaded = true;
         });
         _mapController.move(_userLocation!, _defaultZoom);
@@ -150,6 +152,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.hiking_assistant',
+                tileProvider: NetworkTileProvider(silenceExceptions: true),
               ),
 
               // 标记图层 - 所有路线的起点
@@ -229,13 +232,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           ),
 
           // 位置信息卡片
-          if (chatState.currentLocation != null)
+          if (currentLocation != null)
             Positioned(
               top: AppSpacing.md,
               left: AppSpacing.md,
               right: AppSpacing.md,
               child: MapLocationCard(
-                address: chatState.currentLocation!.address,
+                address: currentLocation.address,
                 onRefresh: () {
                   ref.read(chatNotifierProvider.notifier).refreshLocation();
                 },

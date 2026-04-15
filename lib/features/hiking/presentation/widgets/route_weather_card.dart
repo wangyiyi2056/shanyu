@@ -14,6 +14,8 @@ class RouteWeatherCard extends StatelessWidget {
     return weatherAsync.when(
       data: (weather) {
         final isGood = weather.isGoodForHiking;
+        final maxTemp = weather.maxTemp;
+        final minTemp = weather.minTemp;
         return Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -46,9 +48,9 @@ class RouteWeatherCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (weather.maxTemp != null && weather.minTemp != null)
+                      if (maxTemp != null && minTemp != null)
                         Text(
-                          '最高 ${weather.maxTemp!.toStringAsFixed(0)}°C / 最低 ${weather.minTemp!.toStringAsFixed(0)}°C · 风速 ${weather.windSpeed.toStringAsFixed(0)} km/h',
+                          '最高 ${maxTemp.toStringAsFixed(0)}°C / 最低 ${minTemp.toStringAsFixed(0)}°C · 风速 ${weather.windSpeed.toStringAsFixed(0)} km/h',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textHint,
                           ),

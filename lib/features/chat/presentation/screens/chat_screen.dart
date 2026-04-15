@@ -23,11 +23,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialMessage != null && widget.initialMessage!.trim().isNotEmpty) {
+    final initialMessage = widget.initialMessage;
+    if (initialMessage != null && initialMessage.trim().isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_initialMessageSent && mounted) {
           _initialMessageSent = true;
-          ref.read(chatNotifierProvider.notifier).sendMessage(widget.initialMessage!);
+          ref.read(chatNotifierProvider.notifier).sendMessage(initialMessage);
         }
       });
     }

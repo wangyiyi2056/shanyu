@@ -389,6 +389,32 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
   - 避免将底层异常信息直接暴露给终端用户
 - `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
 
+### #34 消除 ! 空断言操作符 (2026-04-15 - 已完成)
+- `lib/shared/services/location_service.dart`:
+  - 将 `place.locality!`、`place.administrativeArea!`、`place.country!` 改为局部变量 + null 检查
+- `lib/features/hiking/presentation/widgets/route_weather_card.dart`:
+  - 将 `weather.maxTemp!`、`weather.minTemp!` 提前提取为局部变量
+- `lib/features/hiking/presentation/screens/map_screen.dart`:
+  - 将 `chatState.currentLocation!.latLng` 改为局部变量 `currentLocation`
+- `lib/features/chat/presentation/screens/chat_screen.dart`:
+  - 将 `widget.initialMessage!` 改为局部变量 `initialMessage`
+- `lib/features/chat/presentation/providers/chat_provider.dart`:
+  - 将 `weatherData.maxTemp!`、`weatherData.minTemp!` 改为局部变量
+- `lib/features/tracking/presentation/screens/track_detail_screen.dart`:
+  - 将 `trackDetailAsync.valueOrNull!.$1` 改为局部变量 `trackData`
+  - 将 `points.first.elevation!`、`points.last.elevation!` 改为局部变量并使用 `firstOrNull`/`lastOrNull`
+- `lib/features/tracking/data/datasources/track_local_datasource.dart`:
+  - 将 `_database!.close()` 改为局部变量 `db`
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
+### #35 减少 Widget 测试中的 OpenStreetMap 网络噪音 (2026-04-15 - 已完成)
+- 为所有 `TileLayer` 配置 `NetworkTileProvider(silenceExceptions: true)`:
+  - `lib/features/hiking/presentation/widgets/route_map_preview.dart`
+  - `lib/features/hiking/presentation/screens/map_screen.dart`
+  - `lib/features/tracking/presentation/screens/track_detail_screen.dart`
+- 瓦片加载失败时不再抛出异常，返回透明图片，消除测试输出中的 `ClientException: 400` 噪音
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过，测试输出清洁
+
 ### 循环状态
 所有计划内任务（#1-#27，除暂停的 #4）均已完成。代码库当前状态：
 - 功能完整，所有核心流程可跑通
@@ -398,6 +424,8 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - 文件大小控制在 800 行以内
 - `flutter_markdown` discontinued 迁移已完成（`flutter_markdown_plus`）
 - 代码库无 `debugPrint`、无就地修改列表、无异常信息泄露给用户
+- 代码库无 `!` 空断言操作符在 null-check 后的冗余使用
+- 测试输出无 OpenStreetMap 瓦片加载噪音
 - 自主循环评估：当前代码库无重大缺漏，可优化项已基本处理完毕，循环进入待机状态
 
 ## 用户偏好记录

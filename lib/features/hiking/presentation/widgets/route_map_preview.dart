@@ -43,6 +43,7 @@ class RouteMapPreview extends StatelessWidget {
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.example.hiking_assistant',
+              tileProvider: NetworkTileProvider(silenceExceptions: true),
             ),
             PolylineLayer(
               polylines: [

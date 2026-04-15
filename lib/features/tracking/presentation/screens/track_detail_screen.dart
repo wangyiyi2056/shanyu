@@ -18,15 +18,16 @@ class TrackDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trackDetailAsync = ref.watch(trackDetailProvider(trackId));
+    final trackData = trackDetailAsync.valueOrNull;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('轨迹详情'),
         actions: [
-          if (trackDetailAsync.valueOrNull != null)
+          if (trackData != null)
             IconButton(
               icon: const Icon(Icons.share_outlined),
-              onPressed: () => _shareTrack(context, trackDetailAsync.valueOrNull!.$1),
+              onPressed: () => _shareTrack(context, trackData.$1),
             ),
         ],
       ),
@@ -79,6 +80,9 @@ class _TrackDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firstElevation = points.firstOrNull?.elevation;
+    final lastElevation = points.lastOrNull?.elevation;
+
     return Column(
       children: [
         // 地图区域
@@ -150,15 +154,15 @@ class _TrackDetailView extends StatelessWidget {
                     value:
                         '${points.last.latitude.toStringAsFixed(4)}, ${points.last.longitude.toStringAsFixed(4)}',
                   ),
-                  if (points.first.elevation != null)
+                  if (firstElevation != null)
                     _InfoRow(
                       label: '起点海拔',
-                      value: '${points.first.elevation!.toStringAsFixed(1)} m',
+                      value: '${firstElevation.toStringAsFixed(1)} m',
                     ),
-                  if (points.last.elevation != null)
+                  if (lastElevation != null)
                     _InfoRow(
                       label: '终点海拔',
-                      value: '${points.last.elevation!.toStringAsFixed(1)} m',
+                      value: '${lastElevation.toStringAsFixed(1)} m',
                     ),
                 ],
               ],
@@ -201,6 +205,7 @@ class _TrackMap extends StatelessWidget {
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.hiking_assistant',
+          tileProvider: NetworkTileProvider(silenceExceptions: true),
         ),
         PolylineLayer(
           polylines: [

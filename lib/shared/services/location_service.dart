@@ -110,14 +110,17 @@ class LocationService {
         final place = placemarks.first;
         final parts = <String>[];
 
-        if (place.locality != null && place.locality!.isNotEmpty) {
-          parts.add(place.locality!);
+        final locality = place.locality;
+        if (locality != null && locality.isNotEmpty) {
+          parts.add(locality);
         }
-        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
-          parts.add(place.administrativeArea!);
+        final administrativeArea = place.administrativeArea;
+        if (administrativeArea != null && administrativeArea.isNotEmpty) {
+          parts.add(administrativeArea);
         }
-        if (place.country != null && place.country!.isNotEmpty) {
-          parts.add(place.country!);
+        final country = place.country;
+        if (country != null && country.isNotEmpty) {
+          parts.add(country);
         }
 
         if (parts.isNotEmpty) {
