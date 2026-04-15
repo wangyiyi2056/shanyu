@@ -24,7 +24,10 @@ final trackDetailProvider =
     final repository = ref.watch(trackRepositoryProvider);
     final track = await repository.getTrackById(trackId);
     final points = await repository.getTrackPoints(trackId);
-    return (track!, points);
+    if (track == null) {
+      throw StateError('Track not found for id $trackId');
+    }
+    return (track, points);
   },
 );
 
