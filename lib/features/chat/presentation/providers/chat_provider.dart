@@ -108,8 +108,8 @@ class ChatState {
 
 // 简单的 UUID 生成器
 String _generateUuid() {
-  return DateTime.now().millisecondsSinceEpoch.toString() +
-      (1000 + (DateTime.now().microsecond % 9000)).toString();
+  final now = DateTime.now();
+  return '${now.millisecondsSinceEpoch}${1000 + (now.microsecond % 9000)}';
 }
 
 // ChatNotifier

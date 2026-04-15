@@ -5,13 +5,11 @@ import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 class RouteLocalDatasource {
   /// 获取所有路线
   Future<List<HikingRoute>> getAllRoutes() async {
-    await Future.delayed(const Duration(milliseconds: 100));
     return _sampleRoutes;
   }
 
   /// 根据 ID 获取路线
   Future<HikingRoute?> getRouteById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 50));
     return _sampleRoutes.where((route) => route.id == id).firstOrNull;
   }
 
@@ -27,7 +25,6 @@ class RouteLocalDatasource {
 
   /// 根据难度筛选
   Future<List<HikingRoute>> getRoutesByDifficulty(String difficulty) async {
-    await Future.delayed(const Duration(milliseconds: 100));
     return _sampleRoutes
         .where((route) => route.difficulty == difficulty)
         .toList();
