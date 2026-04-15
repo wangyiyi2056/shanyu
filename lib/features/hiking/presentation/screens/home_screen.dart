@@ -50,37 +50,68 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar
+          // Hero App Bar
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 220,
             floating: false,
             pinned: true,
+            backgroundColor: AppColors.primary,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text('爬山助手'),
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                  ),
+              title: const Text(
+                '爬山助手',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
                 ),
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Icon(
-                        Icons.terrain,
-                        size: 200,
-                        color: Colors.white.withValues(alpha: 0.3),
+              ),
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Gradient background
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: AppColors.heroGradient,
+                    ),
+                  ),
+                  // Decorative pattern
+                  Positioned(
+                    right: -40,
+                    top: -20,
+                    child: Icon(
+                      Icons.terrain,
+                      size: 280,
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                  ),
+                  Positioned(
+                    left: -30,
+                    bottom: 20,
+                    child: Icon(
+                      Icons.forest,
+                      size: 160,
+                      color: Colors.white.withValues(alpha: 0.05),
+                    ),
+                  ),
+                  // Bottom wave
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: CustomPaint(
+                      size: const Size(double.infinity, 40),
+                      painter: _WavePainter(
+                        color: AppColors.background,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined),
+                icon: const Icon(Icons.notifications_outlined,
+                    color: Colors.white),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('暂无新通知')),
@@ -92,37 +123,30 @@ class HomeScreen extends ConsumerWidget {
 
           // Content
           SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
+                const SizedBox(height: AppSpacing.sm),
+
                 // 天气卡片
                 const _WeatherCard(),
 
                 const SizedBox(height: AppSpacing.lg),
 
                 // 快捷入口
-                Text(
-                  '快捷功能',
-                  style: Theme.of(context).textTheme.titleMedium,
+                _SectionHeader(
+                  title: '快捷功能',
+                  onSeeAll: null,
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                _QuickActionsGrid(),
+                const _QuickActionsGrid(),
 
                 const SizedBox(height: AppSpacing.lg),
 
                 // 推荐路线
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '推荐路线',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    TextButton(
-                      onPressed: () => context.go('/map'),
-                      child: const Text('查看全部'),
-                    ),
-                  ],
+                _SectionHeader(
+                  title: '推荐路线',
+                  onSeeAll: () => context.go('/map'),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 const _RecommendedRoutesList(),
@@ -130,26 +154,62 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.lg),
 
                 // 最近活动
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '最近活动',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    TextButton(
-                      onPressed: () => context.push('/tracks'),
-                      child: const Text('查看全部'),
-                    ),
-                  ],
+                _SectionHeader(
+                  title: '最近活动',
+                  onSeeAll: () => context.push('/tracks'),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 const _RecentActivitiesList(),
+
+                const SizedBox(height: AppSpacing.xl),
               ]),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final VoidCallback? onSeeAll;
+
+  const _SectionHeader({
+    required this.title,
+    this.onSeeAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+        ),
+        if (onSeeAll != null)
+          TextButton(
+            onPressed: onSeeAll,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('查看全部'),
+                SizedBox(width: 2),
+                Icon(Icons.chevron_right, size: 16),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -162,52 +222,109 @@ class _WeatherCard extends ConsumerWidget {
     final weatherAsync = ref.watch(homeWeatherProvider);
 
     return weatherAsync.when(
-      data: (weather) => Card(
+      data: (weather) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(color: AppColors.divider),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.06),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
-              Text(
-                weather.iconEmoji,
-                style: const TextStyle(fontSize: 48),
+              // Weather icon with background
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: weather.isGoodForHiking
+                      ? AppColors.success.withValues(alpha: 0.1)
+                      : AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                ),
+                child: Center(
+                  child: Text(
+                    weather.iconEmoji,
+                    style: const TextStyle(fontSize: 36),
+                  ),
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        Text(
+                          '${weather.temperature.toStringAsFixed(0)}°',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: weather.isGoodForHiking
+                                ? AppColors.success.withValues(alpha: 0.12)
+                                : AppColors.warning.withValues(alpha: 0.12),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusFull),
+                          ),
+                          child: Text(
+                            weather.isGoodForHiking ? '适宜爬山' : '注意天气',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: weather.isGoodForHiking
+                                  ? AppColors.success
+                                  : AppColors.warning,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
                     Text(
                       weather.description,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                     ),
-                    Text(
-                      '${weather.temperature.toStringAsFixed(0)}°C',
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                    ),
+                    const SizedBox(height: 4),
                     Text(
                       weather.hikingAdvice,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: weather.isGoodForHiking
-                                ? AppColors.success
-                                : AppColors.warning,
+                            color: AppColors.textHint,
                           ),
                     ),
                   ],
                 ),
               ),
               Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Icon(Icons.air,
-                      size: 20, color: AppColors.textSecondary),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${weather.windSpeed.toStringAsFixed(0)} km/h',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  _WeatherMiniStat(
+                    icon: Icons.air,
+                    value: '${weather.windSpeed.toStringAsFixed(0)} km/h',
+                    label: '风速',
                   ),
                 ],
               ),
@@ -215,18 +332,40 @@ class _WeatherCard extends ConsumerWidget {
           ),
         ),
       ),
-      loading: () => const Card(
-        child: SizedBox(
-          height: 100,
-          child: Center(child: CircularProgressIndicator()),
+      loading: () => Container(
+        height: 104,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(color: AppColors.divider),
         ),
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
-      error: (_, __) => Card(
+      error: (_, __) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(color: AppColors.divider),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
-              const Icon(Icons.wb_sunny, size: 48, color: AppColors.warning),
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.wb_sunny,
+                    size: 32,
+                    color: AppColors.warning,
+                  ),
+                ),
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -236,10 +375,11 @@ class _WeatherCard extends ConsumerWidget {
                       '天气加载失败',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
+                    const SizedBox(height: 2),
                     Text(
-                      '请检查网络连接',
+                      '请检查网络连接后重试',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textHint,
                           ),
                     ),
                   ],
@@ -253,81 +393,140 @@ class _WeatherCard extends ConsumerWidget {
   }
 }
 
-class _QuickActionsGrid extends StatelessWidget {
+class _WeatherMiniStat extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _WeatherMiniStat({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 4,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.sm,
-      crossAxisSpacing: AppSpacing.sm,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        _QuickActionItem(
-          icon: Icons.route,
-          label: '找路线',
-          color: AppColors.primary,
-          onTap: () => context.go('/chat'),
+        Icon(icon, size: 18, color: AppColors.textHint),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
         ),
-        _QuickActionItem(
-          icon: Icons.navigation,
-          label: '导航',
-          color: AppColors.info,
-          onTap: () => context.go('/map'),
-        ),
-        _QuickActionItem(
-          icon: Icons.play_circle_outline,
-          label: '记录',
-          color: AppColors.secondary,
-          onTap: () => context.go('/map'),
-        ),
-        _QuickActionItem(
-          icon: Icons.photo_camera,
-          label: '识植物',
-          color: AppColors.success,
-          onTap: () => context
-              .go('/chat?message=我在爬山时看到一种不认识的植物，请帮我描述一下常见野外植物的识别方法和注意事项'),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: AppColors.textHint,
+              ),
         ),
       ],
     );
   }
 }
 
-class _QuickActionItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickActionItem({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
+class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid();
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                  ),
-            ),
-          ],
+    final actions = [
+      _QuickActionData(
+        icon: Icons.route,
+        label: '找路线',
+        color: AppColors.primary,
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+        onTap: () => context.go('/chat'),
+      ),
+      _QuickActionData(
+        icon: Icons.navigation,
+        label: '导航',
+        color: AppColors.info,
+        backgroundColor: AppColors.info.withValues(alpha: 0.1),
+        onTap: () => context.go('/map'),
+      ),
+      _QuickActionData(
+        icon: Icons.play_circle_outline,
+        label: '记录',
+        color: AppColors.secondary,
+        backgroundColor: AppColors.secondary.withValues(alpha: 0.1),
+        onTap: () => context.go('/map'),
+      ),
+      _QuickActionData(
+        icon: Icons.photo_camera,
+        label: '识植物',
+        color: AppColors.success,
+        backgroundColor: AppColors.success.withValues(alpha: 0.1),
+        onTap: () =>
+            context.go('/chat?message=我在爬山时看到一种不认识的植物，请帮我描述一下常见野外植物的识别方法和注意事项'),
+      ),
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children:
+          actions.map((action) => _QuickActionItem(data: action)).toList(),
+    );
+  }
+}
+
+class _QuickActionData {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final Color backgroundColor;
+  final VoidCallback onTap;
+
+  _QuickActionData({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.backgroundColor,
+    required this.onTap,
+  });
+}
+
+class _QuickActionItem extends StatelessWidget {
+  final _QuickActionData data;
+
+  const _QuickActionItem({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: data.onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        child: Container(
+          width: 72,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: data.backgroundColor,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                ),
+                child: Icon(data.icon, color: data.color, size: 26),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                data.label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -347,7 +546,8 @@ class _RecommendedRoutesList extends ConsumerWidget {
           return const _EmptyCard(message: '暂无推荐路线');
         }
         return Column(
-          children: recommendations.map((rec) {
+          children: recommendations.asMap().entries.map((entry) {
+            final rec = entry.value;
             return Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _RouteCard(
@@ -361,7 +561,9 @@ class _RecommendedRoutesList extends ConsumerWidget {
       },
       loading: () => const SizedBox(
         height: 160,
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       ),
       error: (_, __) => const _EmptyCard(message: '推荐路线加载失败'),
     );
@@ -379,10 +581,10 @@ class _RouteCard extends StatelessWidget {
 
   Widget _fallbackRouteImage() {
     return Container(
-      color: AppColors.primary.withValues(alpha: 0.2),
+      color: AppColors.surfaceVariant,
       child: const Icon(
         Icons.terrain,
-        size: 40,
+        size: 32,
         color: AppColors.primary,
       ),
     );
@@ -390,20 +592,25 @@ class _RouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: AppColors.divider),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           child: Row(
             children: [
               // 封面图
               ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 child: SizedBox(
-                  width: 80,
-                  height: 80,
+                  width: 88,
+                  height: 88,
                   child: route.imageUrl.isNotEmpty
                       ? Image.network(
                           route.imageUrl,
@@ -413,7 +620,7 @@ class _RouteCard extends StatelessWidget {
                           loadingBuilder: (context, child, progress) {
                             if (progress == null) return child;
                             return Container(
-                              color: AppColors.primary.withValues(alpha: 0.1),
+                              color: AppColors.surfaceVariant,
                               child: const Center(
                                 child:
                                     CircularProgressIndicator(strokeWidth: 2),
@@ -433,53 +640,106 @@ class _RouteCard extends StatelessWidget {
                   children: [
                     Text(
                       route.name,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
+                            horizontal: 8,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: hexToColor(route.difficultyColor).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
+                            color: hexToColor(route.difficultyColor)
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             route.difficultyLabel,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                                  color: hexToColor(route.difficultyColor),
-                                ),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: hexToColor(route.difficultyColor),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.star,
-                            size: 14, color: AppColors.warning),
+                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.star_rounded,
+                          size: 14,
+                          color: AppColors.secondary,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           route.rating.toString(),
-                          style: Theme.of(context).textTheme.labelSmall,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${route.distance} km · ${route.estimatedDuration} 分钟',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _RouteMetaItem(
+                          icon: Icons.straighten,
+                          value: '${route.distance} km',
+                        ),
+                        const SizedBox(width: 12),
+                        _RouteMetaItem(
+                          icon: Icons.timer_outlined,
+                          value: '${route.estimatedDuration} 分钟',
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.textHint),
+              const Padding(
+                padding: EdgeInsets.only(right: AppSpacing.xs),
+                child: Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textHint,
+                  size: 20,
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RouteMetaItem extends StatelessWidget {
+  final IconData icon;
+  final String value;
+
+  const _RouteMetaItem({required this.icon, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: AppColors.textHint),
+        const SizedBox(width: 3),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.textHint,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -494,16 +754,23 @@ class _RecentActivitiesList extends ConsumerWidget {
     return tracksAsync.when(
       data: (tracks) {
         if (tracks.isEmpty) {
-          return const _EmptyCard(message: '暂无活动记录，开始你的第一次爬山之旅吧！');
+          return const _EmptyCard(
+            message: '暂无活动记录，开始你的第一次爬山之旅吧！',
+          );
         }
         return Column(
           children: tracks.map((track) {
             return Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Card(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                  border: Border.all(color: AppColors.divider),
+                ),
                 child: InkWell(
                   onTap: () => context.push('/track/${track.id}'),
-                  borderRadius: BorderRadius.circular(AppSpacing.cardRadius),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: Row(
@@ -512,9 +779,9 @@ class _RecentActivitiesList extends ConsumerWidget {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: AppColors.secondary.withValues(alpha: 0.2),
+                            color: AppColors.secondary.withValues(alpha: 0.1),
                             borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
+                                BorderRadius.circular(AppSpacing.radiusLg),
                           ),
                           child: const Icon(
                             Icons.timeline,
@@ -528,18 +795,34 @@ class _RecentActivitiesList extends ConsumerWidget {
                             children: [
                               Text(
                                 track.name,
-                                style: Theme.of(context).textTheme.titleSmall,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '${track.distanceText} · ${track.durationText}',
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: AppColors.textHint,
+                                    ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right,
-                            color: AppColors.textHint),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: AppColors.textHint,
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),
@@ -551,7 +834,7 @@ class _RecentActivitiesList extends ConsumerWidget {
       },
       loading: () => const SizedBox(
         height: 100,
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
       error: (_, __) => const _EmptyCard(message: '活动记录加载失败'),
     );
@@ -565,22 +848,31 @@ class _EmptyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: AppColors.divider),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.xl,
+          horizontal: AppSpacing.md,
+        ),
         child: Column(
           children: [
-            const Icon(
+            Icon(
               Icons.info_outline,
-              size: 48,
-              color: AppColors.textHint,
+              size: 40,
+              color: AppColors.textHint.withValues(alpha: 0.7),
             ),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppColors.textHint,
                   ),
             ),
           ],
@@ -588,4 +880,40 @@ class _EmptyCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _WavePainter extends CustomPainter {
+  final Color color;
+
+  _WavePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..lineTo(0, size.height * 0.5)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.8,
+        size.width * 0.5,
+        size.height * 0.5,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.75,
+        size.height * 0.2,
+        size.width,
+        size.height * 0.5,
+      )
+      ..lineTo(size.width, 0)
+      ..lineTo(0, 0)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
