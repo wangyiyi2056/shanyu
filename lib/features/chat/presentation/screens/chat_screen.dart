@@ -58,12 +58,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.terrain, color: AppColors.primary),
-            SizedBox(width: AppSpacing.sm),
-            Text('爬山助手'),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryLight],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: const Icon(Icons.terrain, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            const Text('爬山助手'),
           ],
         ),
         actions: [
@@ -108,22 +120,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.terrain,
-            size: 80,
-            color: AppColors.primary.withValues(alpha: 0.5),
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primaryMuted, AppColors.surfaceVariant],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: const Icon(
+              Icons.terrain,
+              size: 48,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            '你好，我是爬山助手 🌲',
-            style: Theme.of(context).textTheme.headlineSmall,
+            '你好，我是爬山助手',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             '有什么我可以帮你的吗？',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+              color: AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
         ],
