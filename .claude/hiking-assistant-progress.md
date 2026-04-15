@@ -583,21 +583,39 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
 - 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
 
+### #57 修复直接数据源实例化和上下文安全问题 (2026-04-15 - 已完成)
+- `lib/features/hiking/presentation/screens/home_screen.dart`:
+  - `homeRoutesProvider` 中移除直接 `RouteLocalDatasource()` / `RouteRecommendationUseCase()` 实例化
+  - 改为 `ref.watch(routeRecommendationUseCaseProvider)`，遵循依赖注入规范
+- `lib/features/hiking/presentation/screens/map_screen.dart`:
+  - `_loadRoutes()` 中同样改用 `ref.read(routeRecommendationUseCaseProvider)`
+  - `_stopTracking` 中 `ScaffoldMessenger.of(context)` 使用外层 `BuildContext`，避免 dialog context 风险
+- `lib/features/chat/presentation/providers/chat_provider.dart`:
+  - 移除底部重复的 `routeRecommendationUseCaseProvider`
+  - 从 `route_provider.dart` 导入 canonical provider
+- `lib/features/profile/presentation/providers/favorite_routes_provider.dart`:
+  - 移除直接 `RouteLocalDatasource()` 实例化
+  - 改为 `ref.watch(routeLocalDatasourceProvider)`
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+- 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
+
 ---
 
 ## 自主优化循环总结
 **循环状态：已完成** (2026-04-15)
 
-从 #42 到 #56，共完成 **15 轮** 自主代码质量优化循环。经过全面扫描和修复，代码库已达到以下状态：
+从 #42 到 #57，共完成 **16 轮** 自主代码质量优化循环。经过全面扫描和修复，代码库已达到以下状态：
 
 - `flutter analyze`：**0 警告**
 - `flutter test`：**104 个测试全部通过**
 - `lib/` 生产代码中：**无 `!` 空断言**、无 bare catch、无 `.then()` 链、无 `debugPrint`、无 `dynamic` 类型误用
+- 所有 `RouteLocalDatasource` / `RouteRecommendationUseCase` 直接实例化已替换为 Riverpod provider 注入
 - 所有 `StatefulWidget` 均正确释放资源（Controller、Subscription、Timer）
 - 所有异步操作后的 `BuildContext` 使用均带有 `mounted` 检查
 - 文件大小全部控制在 800 行以内
 - 图片加载已配置 `cacheWidth/cacheHeight` 降低内存占用
 - 流回调异常已被妥善捕获，避免未处理 Future
+- 任务 #23（修复关键安全和质量问题）和 #39 均已彻底完成
 
 **结论**：当前代码库的计划功能已全部实现并通过测试，可优化项与缺漏内容已循环处理完毕，循环正式结束。
 
