@@ -599,6 +599,27 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
 - 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
 
+### #58 修复依赖注入、类型安全和弹窗上下文问题 (2026-04-15 - 已完成)
+- `lib/features/tracking/presentation/providers/tracking_provider.dart`:
+  - 新增 `trackLocalDatasourceProvider`
+  - `trackRepositoryProvider` 改为 `TrackRepositoryImpl(ref.watch(trackLocalDatasourceProvider))`
+- `lib/features/hiking/presentation/providers/review_provider.dart`:
+  - 新增 `reviewLocalDatasourceProvider`
+  - `reviewRepositoryProvider` 改为 `ReviewRepositoryImpl(ref.watch(reviewLocalDatasourceProvider))`
+- `lib/features/weather/data/services/weather_api_service.dart`:
+  - `getWeatherForRoute` 参数从 `List<dynamic>` 改为 `List<Waypoint>`
+  - 导入 `route_model.dart` 中的 `Waypoint`
+- `lib/features/tracking/presentation/screens/track_list_screen.dart`:
+  - `ListView.builder` 的 `_DismissibleTrackItem` 增加 `ValueKey(track.id)`
+  - `_DismissibleTrackItem` 接收 `super.key` 并透传给 `Dismissible`
+- `lib/features/profile/presentation/screens/settings_screen.dart`:
+  - `_showClearTracksDialog` 中 `ScaffoldMessenger.of(context)` 改用外层 `BuildContext`
+  - dialog builder 参数重命名为 `dialogContext`
+- `lib/features/chat/data/services/claude_api_service.dart`:
+  - 为本地 HTTP URL 添加注释，明确仅开发环境使用
+- `flutter analyze` 无警告，`flutter test` 104 个测试全部通过
+- GitHub 推送状态：由于网络超时，本地提交（#58）尚未同步到远程，待网络恢复后重试
+
 ---
 
 ## 自主优化循环总结
