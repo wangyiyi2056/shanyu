@@ -6,7 +6,7 @@ import 'package:hiking_assistant/features/chat/domain/services/intent_service.da
 import 'package:hiking_assistant/features/chat/data/services/claude_api_service.dart';
 import 'package:hiking_assistant/shared/services/location_service.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
-import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
+import 'package:hiking_assistant/features/hiking/presentation/providers/route_provider.dart';
 import 'package:hiking_assistant/features/weather/data/services/weather_api_service.dart';
 import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
 
@@ -491,9 +491,3 @@ final chatNotifierProvider =
   );
 });
 
-// 导入路线推荐 Provider
-final routeRecommendationUseCaseProvider =
-    Provider<RouteRecommendationUseCase>((ref) {
-  final datasource = RouteLocalDatasource();
-  return RouteRecommendationUseCase(datasource);
-});

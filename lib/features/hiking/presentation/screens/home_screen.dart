@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 import 'package:hiking_assistant/features/chat/presentation/providers/chat_provider.dart';
-import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
+import 'package:hiking_assistant/features/hiking/presentation/providers/route_provider.dart';
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
@@ -25,8 +25,7 @@ final homeWeatherProvider = FutureProvider<WeatherData>((ref) async {
 /// 首页推荐路线 Provider
 final homeRoutesProvider =
     FutureProvider<List<RouteRecommendation>>((ref) async {
-  final datasource = RouteLocalDatasource();
-  final useCase = RouteRecommendationUseCase(datasource);
+  final useCase = ref.watch(routeRecommendationUseCaseProvider);
   final location = ref.watch(chatNotifierProvider).currentLocation;
   return useCase.getRecommendationsSync(
     preferences: RoutePreferences(

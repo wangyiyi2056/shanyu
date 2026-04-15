@@ -7,8 +7,8 @@ import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 import 'package:hiking_assistant/features/chat/presentation/providers/chat_provider.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
-import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
+import 'package:hiking_assistant/features/hiking/presentation/providers/route_provider.dart';
 import 'package:hiking_assistant/features/hiking/presentation/widgets/map_location_card.dart';
 import 'package:hiking_assistant/features/hiking/presentation/widgets/nearby_route_item.dart';
 import 'package:hiking_assistant/features/hiking/presentation/widgets/recording_status_panel.dart';
@@ -61,8 +61,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   void _loadRoutes() {
-    final datasource = RouteLocalDatasource();
-    final useCase = RouteRecommendationUseCase(datasource);
+    final useCase = ref.read(routeRecommendationUseCaseProvider);
     final chatState = ref.read(chatNotifierProvider);
     // 同步加载本地数据
     final routes = useCase.getRecommendationsSync(
@@ -618,17 +617,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void _stopTracking(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('结束轨迹记录'),
         content: const Text('确定要结束并保存这条轨迹吗？'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('取消'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               ref.read(trackRecorderProvider.notifier).stopRecording();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('轨迹已保存')),
