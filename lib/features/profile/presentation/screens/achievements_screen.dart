@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/features/profile/data/models/achievement_model.dart';
 import 'package:hiking_assistant/features/profile/presentation/providers/achievements_provider.dart';
 
 class AchievementsScreen extends ConsumerWidget {
@@ -82,7 +83,7 @@ class AchievementsScreen extends ConsumerWidget {
 }
 
 class _AchievementCard extends StatelessWidget {
-  final dynamic achievement;
+  final Achievement achievement;
 
   const _AchievementCard({required this.achievement});
 

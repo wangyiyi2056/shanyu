@@ -407,6 +407,12 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
   - 将 `_database!.close()` 改为局部变量 `db`
 - `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
 
+### #37 移除 dynamic 类型使用 (2026-04-15 - 已完成)
+- `lib/features/profile/presentation/screens/achievements_screen.dart`:
+  - `_AchievementCard` 的 `achievement` 字段类型从 `dynamic` 改为 `Achievement`
+  - 新增对应模型导入，增强类型安全和 IDE 补全
+- `flutter analyze` 无警告，`flutter test` 105 个测试全部通过
+
 ### #36 规范异常捕获类型 (2026-04-15 - 已完成)
 - `lib/features/profile/presentation/providers/settings_provider.dart`:
   - 将两处 bare `catch (e, st)` 改为 `on Exception catch (e, st)`
@@ -433,6 +439,7 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
 - 代码库无 `!` 空断言操作符在 null-check 后的冗余使用
 - 测试输出无 OpenStreetMap 瓦片加载噪音
 - 自主循环评估：当前代码库无重大缺漏，可优化项已基本处理完毕，循环进入待机状态
+- 最新提交已推送至 GitHub (`wangyiyi2056/shanyu`)
 
 ## 用户偏好记录
 - 目标用户: 休闲徒步者
