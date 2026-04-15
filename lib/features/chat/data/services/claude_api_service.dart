@@ -211,7 +211,7 @@ class ClaudeMessage {
   final String role;
   final String content;
 
-  ClaudeMessage({required this.role, required this.content});
+  const ClaudeMessage({required this.role, required this.content});
 }
 
 /// Claude 响应
@@ -233,5 +233,5 @@ class ClaudeContent {
   final String type;
   final String text;
 
-  ClaudeContent({required this.type, required this.text});
+  const ClaudeContent({required this.type, required this.text});
 }
