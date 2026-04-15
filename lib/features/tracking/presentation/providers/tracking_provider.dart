@@ -6,9 +6,14 @@ import 'package:hiking_assistant/features/tracking/data/datasources/track_local_
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/domain/repositories/track_repository.dart';
 
+/// 轨迹本地数据源 Provider
+final trackLocalDatasourceProvider = Provider<TrackLocalDatasource>((ref) {
+  return TrackLocalDatasource();
+});
+
 /// 轨迹仓储 Provider
 final trackRepositoryProvider = Provider<TrackRepository>((ref) {
-  return TrackRepositoryImpl(TrackLocalDatasource());
+  return TrackRepositoryImpl(ref.watch(trackLocalDatasourceProvider));
 });
 
 /// 所有轨迹列表

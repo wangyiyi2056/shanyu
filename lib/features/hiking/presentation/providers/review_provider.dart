@@ -3,9 +3,14 @@ import 'package:hiking_assistant/features/hiking/data/datasources/review_local_d
 import 'package:hiking_assistant/features/hiking/data/models/review_model.dart';
 import 'package:hiking_assistant/features/hiking/domain/repositories/review_repository.dart';
 
+/// 评价本地数据源 Provider
+final reviewLocalDatasourceProvider = Provider<ReviewLocalDatasource>((ref) {
+  return ReviewLocalDatasource();
+});
+
 /// 评价仓储 Provider
 final reviewRepositoryProvider = Provider<ReviewRepository>((ref) {
-  return ReviewRepositoryImpl(ReviewLocalDatasource());
+  return ReviewRepositoryImpl(ref.watch(reviewLocalDatasourceProvider));
 });
 
 /// 某路线的评价列表

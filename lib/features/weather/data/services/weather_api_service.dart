@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
 
 /// 天气 API 服务（基于 Open-Meteo，无需 API Key）
@@ -72,12 +73,12 @@ class WeatherApiService {
   }
 
   /// 根据路线获取天气（使用路线第一个 waypoint 的位置）
-  Future<WeatherData> getWeatherForRoute(List<dynamic> waypoints) async {
+  Future<WeatherData> getWeatherForRoute(List<Waypoint> waypoints) async {
     if (waypoints.isEmpty) {
       return getDefaultWeather();
     }
     final first = waypoints.first;
-    return getWeather(first.latitude as double, first.longitude as double);
+    return getWeather(first.latitude, first.longitude);
   }
 
   WeatherData _getFallbackWeather(double latitude, double longitude) {

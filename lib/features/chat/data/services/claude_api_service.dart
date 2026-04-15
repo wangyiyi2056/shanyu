@@ -7,7 +7,7 @@ class ClaudeAPIService {
 
   static ClaudeAPIService get instance => ClaudeAPIService._();
 
-  // 本地 API 配置
+  // 本地 API 配置（仅开发环境使用，生产环境应通过 --dart-define 注入 HTTPS 端点）
   static const String _apiUrl = 'http://127.0.0.1:8000/v1/chat/completions';
   static const String _apiKey =
       String.fromEnvironment('CLAUDE_API_KEY', defaultValue: '');

@@ -249,17 +249,17 @@ class SettingsScreen extends ConsumerWidget {
   void _showClearTracksDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('清除轨迹数据'),
         content: const Text('确定要删除所有轨迹记录吗？此操作不可恢复。'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('取消'),
           ),
           FilledButton(
             onPressed: () async {
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
               await ref.read(trackRepositoryProvider).clearAllTracks();
               ref.invalidate(tracksProvider);
               if (context.mounted) {

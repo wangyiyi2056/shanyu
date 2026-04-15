@@ -58,6 +58,7 @@ class _TrackListView extends ConsumerWidget {
         itemBuilder: (context, index) {
           final track = tracks[index];
           return _DismissibleTrackItem(
+            key: ValueKey(track.id),
             track: track,
             onTap: () => context.push('/track/${track.id}'),
             onDelete: () async {
@@ -77,6 +78,7 @@ class _DismissibleTrackItem extends StatelessWidget {
   final Future<void> Function() onDelete;
 
   const _DismissibleTrackItem({
+    super.key,
     required this.track,
     required this.onTap,
     required this.onDelete,
@@ -85,7 +87,7 @@ class _DismissibleTrackItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: ValueKey(track.id),
+      key: key ?? ValueKey(track.id),
       direction: DismissDirection.endToStart,
       confirmDismiss: (_) async {
         final confirmed = await showDialog<bool>(
