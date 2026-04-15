@@ -22,7 +22,6 @@ dependencies:
   http: ^1.2.0
 
   # UI
-  flutter_markdown: ^0.7.0
 
   # 地图
   flutter_map: ^7.0.0
@@ -47,6 +46,7 @@ dependencies:
 
   # 元数据注解
   meta: ^1.11.0
+  flutter_markdown_plus: ^1.0.7
 
 dev_dependencies:
   flutter_test:

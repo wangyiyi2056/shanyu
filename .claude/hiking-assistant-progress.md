@@ -333,14 +333,46 @@ originSessionId: 29879823-2e07-4b34-b632-2ffec156a94c
   - 新增 Widget 测试覆盖 Markdown 链接的安全校验（危险 scheme 拦截 + 正常 https 放行）
 - `flutter analyze` 无警告，`flutter test` 95 个测试全部通过
 
+### #29 迁移 discontinued 依赖 (2026-04-15 - 已完成)
+- `pubspec.yaml`:
+  - 移除已 discontinued 的 `flutter_markdown: ^0.7.0`
+  - 添加 `flutter_markdown_plus: ^1.0.7` 作为替代
+- `lib/features/chat/presentation/widgets/chat_bubble.dart`:
+  - 更新 import 为 `package:flutter_markdown_plus/flutter_markdown_plus.dart`
+  - API 完全兼容，`MarkdownBody` + `MarkdownStyleSheet` 行为一致
+  - 链接安全校验（`onTapLink`）继续生效
+- `flutter analyze` 无警告，`flutter test` 95 个测试全部通过
+
+### #30 补充 star_rating_widget 的 Widget 测试 (2026-04-15 - 已完成)
+- 新增 `test/widget/features/hiking/presentation/widgets/star_rating_widget_test.dart`
+- 覆盖场景：
+  - 只读模式下正确渲染全星 / 半星 / 空星
+  - 交互模式下点击星星触发 `onRatingChanged` 回调
+  - 非交互模式下点击不触发回调
+  - 交互模式但无回调时不崩溃
+  - `ReviewInputDialog` 标题、默认评分、评论输入、提交返回数据
+  - `ReviewInputDialog` 空评论时返回默认文案
+  - `ReviewInputDialog` 取消关闭
+- `flutter test` 105 个测试全部通过
+
+### #31 补充 map_launcher 的单元测试 (2026-04-15 - 已完成)
+- 新增 `test/unit/shared/utils/map_launcher_test.dart`
+- Mock `url_launcher` Platform Channel
+- 覆盖场景：
+  - iOS 优先调用 Apple Maps
+  - Apple Maps 不可用时回退 Google Maps
+  - 无可用地�图应用时返回 false
+- `flutter test` 105 个测试全部通过
+
 ### 循环状态
 所有计划内任务（#1-#27，除暂停的 #4）均已完成。代码库当前状态：
 - 功能完整，所有核心流程可跑通
 - 无静态分析警告
-- 95 个单元/Widget 测试全部通过
+- **105 个** 单元/Widget 测试全部通过
 - 安全基线已加固（HTTPS、URL 校验、参数化 SQL、无硬编码密钥）
 - 文件大小控制在 800 行以内
-- 待评估：`flutter_markdown` 已 discontinued（当前功能正常，可后续评估迁移到 `flutter_markdown_plus`）
+- `flutter_markdown` discontinued 迁移已完成（`flutter_markdown_plus`）
+- 自主循环评估：当前代码库无重大缺漏，可优化项已基本处理完毕，循环进入待机状态
 
 ## 用户偏好记录
 - 目标用户: 休闲徒步者
