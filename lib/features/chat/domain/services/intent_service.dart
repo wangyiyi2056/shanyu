@@ -13,7 +13,8 @@ class LocalIntentRules {
         RegExp(r'摔倒了'),
       ],
       category: IntentCategory.emergency,
-      quickResponse: '【安全第一】我已记录您的位置信息。如果您需要紧急救援，请立即拨打 120 或当地紧急电话。请问您现在具体在哪里？有什么可以帮您的？',
+      quickResponse:
+          '【安全第一】我已记录您的位置信息。如果您需要紧急救援，请立即拨打 120 或当地紧急电话。请问您现在具体在哪里？有什么可以帮您的？',
       priority: 100,
     ),
 
@@ -75,7 +76,8 @@ class LocalIntentRules {
         RegExp(r'^你好|^您好|^嗨|^嘿|^早上好|^下午好|^晚上好'),
       ],
       category: IntentCategory.greeting,
-      quickResponse: '你好！我是爬山助手 🌲 有什么可以帮你的吗？你可以问我：\n• 附近有什么路线\n• 查天气预报\n• 推荐适合的爬山路线\n• 开始记录轨迹',
+      quickResponse:
+          '你好！我是爬山助手 🌲 有什么可以帮你的吗？你可以问我：\n• 附近有什么路线\n• 查天气预报\n• 推荐适合的爬山路线\n• 开始记录轨迹',
       priority: 10,
     ),
 

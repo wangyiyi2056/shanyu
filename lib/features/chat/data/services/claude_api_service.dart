@@ -9,7 +9,8 @@ class ClaudeAPIService {
 
   // 本地 API 配置
   static const String _apiUrl = 'http://127.0.0.1:8000/v1/chat/completions';
-  static const String _apiKey = String.fromEnvironment('CLAUDE_API_KEY', defaultValue: '');
+  static const String _apiKey =
+      String.fromEnvironment('CLAUDE_API_KEY', defaultValue: '');
   static const String _model = 'gemma-4-e4b-it-8bit';
 
   /// 发送消息
@@ -45,7 +46,8 @@ class ClaudeAPIService {
         'content': userMessage,
       });
 
-      final response = await http.post(
+      final response = await http
+          .post(
         Uri.parse(_apiUrl),
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +59,8 @@ class ClaudeAPIService {
           'max_tokens': maxTokens,
           'temperature': 0.7,
         }),
-      ).timeout(
+      )
+          .timeout(
         const Duration(seconds: 60),
         onTimeout: () {
           throw Exception('请求超时，请检查本地模型服务是否运行');
@@ -131,7 +134,9 @@ class ClaudeAPIService {
 需要我帮你规划具体行程吗？''';
     }
 
-    if (lowerInput.contains('路线') || lowerInput.contains('爬山') || lowerInput.contains('山')) {
+    if (lowerInput.contains('路线') ||
+        lowerInput.contains('爬山') ||
+        lowerInput.contains('山')) {
       return '''根据你的位置，我为你找到以下附近路线：
 
 🏔️ **香山公园** (北京)

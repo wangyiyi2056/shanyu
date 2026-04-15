@@ -57,15 +57,15 @@ class RouteWaypointsList extends StatelessWidget {
                   Text(
                     wp.name,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '海拔 ${wp.elevation.toStringAsFixed(0)} m',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textHint,
-                    ),
+                          color: AppColors.textHint,
+                        ),
                   ),
                   if (!isLast) const SizedBox(height: 24),
                 ],

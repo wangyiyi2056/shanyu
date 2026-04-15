@@ -4,12 +4,12 @@ class AppColors {
   AppColors._();
 
   // Primary Palette
-  static const Color primary = Color(0xFF4CAF50);      // Forest Green
+  static const Color primary = Color(0xFF4CAF50); // Forest Green
   static const Color primaryLight = Color(0xFF81C784);
   static const Color primaryDark = Color(0xFF388E3C);
 
   // Secondary Palette
-  static const Color secondary = Color(0xFFFF7043);     // Sunset Orange
+  static const Color secondary = Color(0xFFFF7043); // Sunset Orange
   static const Color secondaryLight = Color(0xFFFF8A65);
   static const Color secondaryDark = Color(0xFFE64A19);
 

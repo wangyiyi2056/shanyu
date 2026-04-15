@@ -43,9 +43,10 @@ class RouteReviewsList extends StatelessWidget {
                         const Spacer(),
                         Text(
                           review.authorName,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textHint,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textHint,
+                                  ),
                         ),
                       ],
                     ),
@@ -58,8 +59,8 @@ class RouteReviewsList extends StatelessWidget {
                     Text(
                       formatDate(review.createdAt),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppColors.textHint,
-                      ),
+                            color: AppColors.textHint,
+                          ),
                     ),
                   ],
                 ),

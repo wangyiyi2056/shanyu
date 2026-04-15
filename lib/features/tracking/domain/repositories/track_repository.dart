@@ -37,7 +37,8 @@ class TrackRepositoryImpl implements TrackRepository {
   Future<void> deleteTrack(String id) => _datasource.deleteTrack(id);
 
   @override
-  Future<void> addTrackPoint(TrackPoint point) => _datasource.addTrackPoint(point);
+  Future<void> addTrackPoint(TrackPoint point) =>
+      _datasource.addTrackPoint(point);
 
   @override
   Future<void> addTrackPoints(List<TrackPoint> points) =>

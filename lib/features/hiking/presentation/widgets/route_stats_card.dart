@@ -48,15 +48,15 @@ class RouteStatsCard extends StatelessWidget {
                   Text(
                     stat['value'] as String,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                   Text(
                     stat['label'] as String,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.textHint,
-                    ),
+                          color: AppColors.textHint,
+                        ),
                   ),
                 ],
               ),

@@ -106,8 +106,8 @@ class RouteDetailScreen extends ConsumerWidget {
                       Text(
                         ' ($reviewCount条评价)',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textHint,
-                        ),
+                              color: AppColors.textHint,
+                            ),
                       ),
                       const Spacer(),
                       Icon(Icons.location_on,
@@ -116,8 +116,8 @@ class RouteDetailScreen extends ConsumerWidget {
                       Text(
                         route.location,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textHint,
-                        ),
+                              color: AppColors.textHint,
+                            ),
                       ),
                     ],
                   ),
@@ -143,11 +143,10 @@ class RouteDetailScreen extends ConsumerWidget {
                         text: route.difficultyLabel,
                         color: hexToColor(route.difficultyColor),
                       ),
-                      ...route.tags
-                          .map((tag) => DifficultyTag(
-                                text: tag,
-                                color: AppColors.primary,
-                              )),
+                      ...route.tags.map((tag) => DifficultyTag(
+                            text: tag,
+                            color: AppColors.primary,
+                          )),
                     ],
                   ),
 
@@ -157,15 +156,15 @@ class RouteDetailScreen extends ConsumerWidget {
                   Text(
                     '路线介绍',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     route.description,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.6,
-                    ),
+                          height: 1.6,
+                        ),
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
@@ -185,8 +184,8 @@ class RouteDetailScreen extends ConsumerWidget {
                   Text(
                     '路线关键点',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   RouteWaypointsList(route: route),
@@ -197,8 +196,8 @@ class RouteDetailScreen extends ConsumerWidget {
                   Text(
                     '路线地图',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   RouteMapPreview(route: route),
@@ -210,9 +209,10 @@ class RouteDetailScreen extends ConsumerWidget {
                     children: [
                       Text(
                         '用户评价',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const Spacer(),
                       TextButton.icon(
@@ -241,7 +241,8 @@ class RouteDetailScreen extends ConsumerWidget {
                 child: isFavoriteAsync.when(
                   data: (isFavorite) => OutlinedButton.icon(
                     onPressed: () async {
-                      final result = await reviewActions.toggleFavorite(route.id);
+                      final result =
+                          await reviewActions.toggleFavorite(route.id);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -323,10 +324,10 @@ class RouteDetailScreen extends ConsumerWidget {
 
     if (result != null) {
       await ref.read(reviewActionsProvider.notifier).submitReview(
-        routeId: route.id,
-        rating: result['rating'] as double,
-        comment: result['comment'] as String,
-      );
+            routeId: route.id,
+            rating: result['rating'] as double,
+            comment: result['comment'] as String,
+          );
     }
   }
 }

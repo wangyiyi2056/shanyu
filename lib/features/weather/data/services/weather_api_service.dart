@@ -26,8 +26,8 @@ class WeatherApiService {
       });
 
       final response = await _client.get(uri).timeout(
-        const Duration(seconds: 10),
-      );
+            const Duration(seconds: 10),
+          );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;

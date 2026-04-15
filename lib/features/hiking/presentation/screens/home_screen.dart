@@ -22,7 +22,8 @@ final homeWeatherProvider = FutureProvider<WeatherData>((ref) async {
 });
 
 /// 首页推荐路线 Provider
-final homeRoutesProvider = FutureProvider<List<RouteRecommendation>>((ref) async {
+final homeRoutesProvider =
+    FutureProvider<List<RouteRecommendation>>((ref) async {
   final datasource = RouteLocalDatasource();
   final useCase = RouteRecommendationUseCase(datasource);
   final location = ref.watch(chatNotifierProvider).currentLocation;
@@ -181,9 +182,10 @@ class _WeatherCard extends ConsumerWidget {
                     ),
                     Text(
                       '${weather.temperature.toStringAsFixed(0)}°C',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                     Text(
                       weather.hikingAdvice,
@@ -200,7 +202,8 @@ class _WeatherCard extends ConsumerWidget {
               ),
               Column(
                 children: [
-                  const Icon(Icons.air, size: 20, color: AppColors.textSecondary),
+                  const Icon(Icons.air,
+                      size: 20, color: AppColors.textSecondary),
                   const SizedBox(height: 4),
                   Text(
                     '${weather.windSpeed.toStringAsFixed(0)} km/h',
@@ -282,12 +285,12 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: Icons.photo_camera,
           label: '识植物',
           color: AppColors.success,
-          onTap: () => context.go('/chat?message=我在爬山时看到一种不认识的植物，请帮我描述一下常见野外植物的识别方法和注意事项'),
+          onTap: () => context
+              .go('/chat?message=我在爬山时看到一种不认识的植物，请帮我描述一下常见野外植物的识别方法和注意事项'),
         ),
       ],
     );
   }
-
 }
 
 class _QuickActionItem extends StatelessWidget {
@@ -349,7 +352,8 @@ class _RecommendedRoutesList extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: _RouteCard(
                 route: rec.route,
-                onTap: () => context.push('/route/${rec.route.id}', extra: rec.route),
+                onTap: () =>
+                    context.push('/route/${rec.route.id}', extra: rec.route),
               ),
             );
           }).toList(),
@@ -418,7 +422,8 @@ class _RouteCard extends StatelessWidget {
                             return Container(
                               color: AppColors.primary.withValues(alpha: 0.1),
                               child: const Center(
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               ),
                             );
                           },
@@ -451,14 +456,17 @@ class _RouteCard extends StatelessWidget {
                           ),
                           child: Text(
                             route.difficultyLabel,
-                            style:
-                                Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      color: _difficultyColor,
-                                    ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                  color: _difficultyColor,
+                                ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.star, size: 14, color: AppColors.warning),
+                        const Icon(Icons.star,
+                            size: 14, color: AppColors.warning),
                         const SizedBox(width: 2),
                         Text(
                           route.rating.toString(),

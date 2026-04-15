@@ -12,9 +12,8 @@ class RouteMapPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final points = route.waypoints
-        .map((wp) => LatLng(wp.latitude, wp.longitude))
-        .toList();
+    final points =
+        route.waypoints.map((wp) => LatLng(wp.latitude, wp.longitude)).toList();
 
     if (points.isEmpty) return const SizedBox.shrink();
 
@@ -67,8 +66,7 @@ class RouteMapPreview extends StatelessWidget {
                   point: points.last,
                   width: 32,
                   height: 32,
-                  child:
-                      Icon(Icons.flag, color: AppColors.secondary, size: 32),
+                  child: Icon(Icons.flag, color: AppColors.secondary, size: 32),
                 ),
               ],
             ),

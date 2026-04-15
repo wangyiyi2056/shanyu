@@ -114,8 +114,8 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
         return;
       }
 
-      final name = trackName ??
-          '轨迹记录 ${DateTime.now().toString().substring(0, 16)}';
+      final name =
+          trackName ?? '轨迹记录 ${DateTime.now().toString().substring(0, 16)}';
       final track = await _repository.createTrack(name);
 
       _recordingStartTime = DateTime.now();
@@ -270,12 +270,16 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
   }
 
   /// 计算两点间球面距离（米）
-  double _haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _haversineDistance(
+      double lat1, double lon1, double lat2, double lon2) {
     const R = 6371000.0;
     final dLat = _toRad(lat2 - lat1);
     final dLon = _toRad(lon2 - lon1);
     final a = _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(_toRad(lat1)) * _cos(_toRad(lat2)) * _sin(dLon / 2) * _sin(dLon / 2);
+        _cos(_toRad(lat1)) *
+            _cos(_toRad(lat2)) *
+            _sin(dLon / 2) *
+            _sin(dLon / 2);
     final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
     return R * c;
   }

@@ -6,7 +6,8 @@ Future<bool> launchMapNavigation({
   required double longitude,
   String? label,
 }) async {
-  final query = label != null ? Uri.encodeComponent(label) : '$latitude,$longitude';
+  final query =
+      label != null ? Uri.encodeComponent(label) : '$latitude,$longitude';
 
   // iOS: Apple Maps
   final appleMapsUrl = Uri.parse(

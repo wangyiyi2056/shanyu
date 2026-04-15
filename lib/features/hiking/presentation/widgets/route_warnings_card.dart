@@ -21,14 +21,15 @@ class RouteWarningsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber, color: Colors.orange.shade700, size: 20),
+              Icon(Icons.warning_amber,
+                  color: Colors.orange.shade700, size: 20),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 '安全提示',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange.shade800,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800,
+                    ),
               ),
             ],
           ),

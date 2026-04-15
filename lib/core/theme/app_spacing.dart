@@ -48,8 +48,7 @@ extension SpacingExtension on num {
   EdgeInsets get allPadding => EdgeInsets.all(toDouble());
   EdgeInsets get horizontalPadding =>
       EdgeInsets.symmetric(horizontal: toDouble());
-  EdgeInsets get verticalPadding =>
-      EdgeInsets.symmetric(vertical: toDouble());
+  EdgeInsets get verticalPadding => EdgeInsets.symmetric(vertical: toDouble());
 }
 
 extension ContextExtension on BuildContext {

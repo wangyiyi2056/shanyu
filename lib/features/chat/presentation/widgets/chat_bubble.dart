@@ -58,8 +58,7 @@ class ChatBubble extends StatelessWidget {
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(AppSpacing.radiusLg),
                   topRight: const Radius.circular(AppSpacing.radiusLg),
-                  bottomLeft:
-                      Radius.circular(isUser ? AppSpacing.radiusLg : 4),
+                  bottomLeft: Radius.circular(isUser ? AppSpacing.radiusLg : 4),
                   bottomRight:
                       Radius.circular(isUser ? 4 : AppSpacing.radiusLg),
                 ),
@@ -71,7 +70,8 @@ class ChatBubble extends StatelessWidget {
                   MarkdownBody(
                     data: message.content,
                     selectable: true,
-                    onTapLink: (text, href, title) => _handleLinkTap(context, href),
+                    onTapLink: (text, href, title) =>
+                        _handleLinkTap(context, href),
                     styleSheet: MarkdownStyleSheet(
                       p: TextStyle(
                         fontSize: 15,
@@ -167,8 +167,7 @@ class ChatBubble extends StatelessWidget {
   void _handleLinkTap(BuildContext context, String? href) {
     if (href == null) return;
     final uri = Uri.tryParse(href);
-    if (uri == null ||
-        (uri.scheme != 'http' && uri.scheme != 'https')) {
+    if (uri == null || (uri.scheme != 'http' && uri.scheme != 'https')) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('不支持的链接类型')),

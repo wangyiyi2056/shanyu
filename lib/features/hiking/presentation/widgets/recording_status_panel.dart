@@ -59,8 +59,10 @@ class RecordingStatusPanel extends StatelessWidget {
               if (isPaused)
                 TextButton.icon(
                   onPressed: onResume,
-                  icon: const Icon(Icons.play_arrow, color: Colors.white, size: 18),
-                  label: const Text('恢复', style: TextStyle(color: Colors.white)),
+                  icon: const Icon(Icons.play_arrow,
+                      color: Colors.white, size: 18),
+                  label:
+                      const Text('恢复', style: TextStyle(color: Colors.white)),
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
@@ -71,7 +73,8 @@ class RecordingStatusPanel extends StatelessWidget {
                 TextButton.icon(
                   onPressed: onPause,
                   icon: const Icon(Icons.pause, color: Colors.white, size: 18),
-                  label: const Text('暂停', style: TextStyle(color: Colors.white)),
+                  label:
+                      const Text('暂停', style: TextStyle(color: Colors.white)),
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,

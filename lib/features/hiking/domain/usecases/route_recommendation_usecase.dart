@@ -186,7 +186,10 @@ class RouteRecommendationUseCase {
     final dLat = _toRad(lat2 - lat1);
     final dLon = _toRad(lon2 - lon1);
     final a = _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(_toRad(lat1)) * _cos(_toRad(lat2)) * _sin(dLon / 2) * _sin(dLon / 2);
+        _cos(_toRad(lat1)) *
+            _cos(_toRad(lat2)) *
+            _sin(dLon / 2) *
+            _sin(dLon / 2);
     final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
     return R * c;
   }
@@ -239,12 +242,14 @@ class RouteRecommendationUseCase {
 
     // 难度匹配
     if (prefs.preferredDifficulty != null) {
-      final matchDiff = _matchDifficulty(route.difficulty, prefs.preferredDifficulty!);
+      final matchDiff =
+          _matchDifficulty(route.difficulty, prefs.preferredDifficulty!);
       score += matchDiff ? 0.3 : -0.1;
     }
 
     // 时间匹配
-    if (prefs.maxDuration != null && route.estimatedDuration <= prefs.maxDuration!) {
+    if (prefs.maxDuration != null &&
+        route.estimatedDuration <= prefs.maxDuration!) {
       score += 0.2;
     }
 
@@ -271,17 +276,20 @@ class RouteRecommendationUseCase {
   }
 
   /// 生成推荐理由
-  List<String> _generateMatchReasons(HikingRoute route, RoutePreferences prefs) {
+  List<String> _generateMatchReasons(
+      HikingRoute route, RoutePreferences prefs) {
     final reasons = <String>[];
 
     if (prefs.preferredDifficulty != null) {
-      final matchDiff = _matchDifficulty(route.difficulty, prefs.preferredDifficulty!);
+      final matchDiff =
+          _matchDifficulty(route.difficulty, prefs.preferredDifficulty!);
       if (matchDiff) {
         reasons.add('难度「${route.difficultyLabel}」符合要求');
       }
     }
 
-    if (prefs.maxDuration != null && route.estimatedDuration <= prefs.maxDuration!) {
+    if (prefs.maxDuration != null &&
+        route.estimatedDuration <= prefs.maxDuration!) {
       reasons.add('预计时长${route.estimatedDuration}分钟，在您的时间范围内');
     }
 

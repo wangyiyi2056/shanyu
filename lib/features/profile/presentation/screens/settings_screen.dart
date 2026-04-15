@@ -46,7 +46,8 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _showThemeModeDialog(context, ref, themeAsync.valueOrNull ?? ThemeMode.system),
+                  onTap: () => _showThemeModeDialog(
+                      context, ref, themeAsync.valueOrNull ?? ThemeMode.system),
                 ),
               ],
             ),
@@ -71,7 +72,9 @@ class SettingsScreen extends ConsumerWidget {
                   onChanged: notificationsAsync.isLoading
                       ? null
                       : (value) async {
-                          await ref.read(settingsActionsProvider.notifier).setNotificationsEnabled(value);
+                          await ref
+                              .read(settingsActionsProvider.notifier)
+                              .setNotificationsEnabled(value);
                           ref.invalidate(notificationsEnabledProvider);
                         },
                 ),
@@ -91,7 +94,8 @@ class SettingsScreen extends ConsumerWidget {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: AppColors.error),
+                  leading:
+                      const Icon(Icons.delete_outline, color: AppColors.error),
                   title: const Text('清除所有轨迹数据'),
                   subtitle: const Text('删除本地保存的所有轨迹记录'),
                   onTap: () => _showClearTracksDialog(context, ref),
@@ -143,7 +147,8 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
                   title: const Text('用户协议'),
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.textHint),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: AppColors.textHint),
                   onTap: () => _showSimpleDialog(
                     context,
                     title: '用户协议',
@@ -157,7 +162,8 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: const Text('隐私政策'),
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.textHint),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: AppColors.textHint),
                   onTap: () => _showSimpleDialog(
                     context,
                     title: '隐私政策',
@@ -175,7 +181,8 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showThemeModeDialog(BuildContext context, WidgetRef ref, ThemeMode currentMode) {
+  void _showThemeModeDialog(
+      BuildContext context, WidgetRef ref, ThemeMode currentMode) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -204,7 +211,8 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _applyThemeMode(BuildContext context, WidgetRef ref, ThemeMode mode) async {
+  Future<void> _applyThemeMode(
+      BuildContext context, WidgetRef ref, ThemeMode mode) async {
     Navigator.of(context).pop();
     final appMode = switch (mode) {
       ThemeMode.light => AppThemeMode.light,
@@ -267,7 +275,8 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showSimpleDialog(BuildContext context, {required String title, required String content}) {
+  void _showSimpleDialog(BuildContext context,
+      {required String title, required String content}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

@@ -45,15 +45,16 @@ class RouteWeatherCard extends StatelessWidget {
                       Text(
                         '${weather.temperature.toStringAsFixed(0)}°C · ${weather.description}',
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       if (maxTemp != null && minTemp != null)
                         Text(
                           '最高 ${maxTemp.toStringAsFixed(0)}°C / 最低 ${minTemp.toStringAsFixed(0)}°C · 风速 ${weather.windSpeed.toStringAsFixed(0)} km/h',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textHint,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textHint,
+                                  ),
                         ),
                     ],
                   ),

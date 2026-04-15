@@ -8,12 +8,14 @@ final routeLocalDatasourceProvider = Provider<RouteLocalDatasource>((ref) {
 });
 
 // UseCase provider
-final routeRecommendationUseCaseProvider = Provider<RouteRecommendationUseCase>((ref) {
+final routeRecommendationUseCaseProvider =
+    Provider<RouteRecommendationUseCase>((ref) {
   return RouteRecommendationUseCase(ref.watch(routeLocalDatasourceProvider));
 });
 
 // 推荐路线列表
-final recommendedRoutesProvider = FutureProvider.family<List<RouteRecommendation>, RoutePreferences>(
+final recommendedRoutesProvider =
+    FutureProvider.family<List<RouteRecommendation>, RoutePreferences>(
   (ref, preferences) async {
     final useCase = ref.watch(routeRecommendationUseCaseProvider);
     return useCase.getRecommendations(preferences: preferences);
@@ -21,7 +23,8 @@ final recommendedRoutesProvider = FutureProvider.family<List<RouteRecommendation
 );
 
 // 根据地点搜索路线
-final searchRoutesProvider = FutureProvider.family<List<RouteRecommendation>, String>(
+final searchRoutesProvider =
+    FutureProvider.family<List<RouteRecommendation>, String>(
   (ref, location) async {
     final useCase = ref.watch(routeRecommendationUseCaseProvider);
     return useCase.searchByLocation(location);

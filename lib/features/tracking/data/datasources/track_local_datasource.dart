@@ -5,7 +5,8 @@ import 'package:hiking_assistant/features/tracking/data/models/track_model.dart'
 
 /// 轨迹本地数据源（SQLite）
 class TrackLocalDatasource {
-  static final TrackLocalDatasource _instance = TrackLocalDatasource._internal();
+  static final TrackLocalDatasource _instance =
+      TrackLocalDatasource._internal();
   factory TrackLocalDatasource() => _instance;
   TrackLocalDatasource._internal();
 

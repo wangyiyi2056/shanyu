@@ -33,8 +33,7 @@ void main() {
       expect(retrieved.bio, '热爱大自然');
     });
 
-    test('getProfile returns default when stored json is corrupted',
-        () async {
+    test('getProfile returns default when stored json is corrupted', () async {
       SharedPreferences.setMockInitialValues({
         'user_profile': 'not-valid-json',
       });

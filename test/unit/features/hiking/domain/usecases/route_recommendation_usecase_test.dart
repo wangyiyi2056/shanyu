@@ -91,7 +91,8 @@ void main() {
       expect(recommendations, isNotEmpty);
       // First route should be closest to user location
       final firstRoute = recommendations.first.route;
-      final minDistance = _minWaypointDistance(firstRoute.waypoints, userLat, userLng);
+      final minDistance =
+          _minWaypointDistance(firstRoute.waypoints, userLat, userLng);
 
       for (int i = 1; i < recommendations.length; i++) {
         final dist = _minWaypointDistance(
@@ -227,7 +228,8 @@ double _minWaypointDistance(
 ) {
   double minDist = double.infinity;
   for (final wp in waypoints) {
-    final dist = _haversineDistance(userLat, userLng, wp.latitude, wp.longitude);
+    final dist =
+        _haversineDistance(userLat, userLng, wp.latitude, wp.longitude);
     if (dist < minDist) minDist = dist;
   }
   return minDist;

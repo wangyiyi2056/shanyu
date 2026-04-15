@@ -239,9 +239,23 @@ class ChatNotifier extends StateNotifier<ChatState> {
   /// 判断内容是否与路线相关
   bool _isRouteRelatedContent(String content) {
     final routeKeywords = [
-      '爬', '登山', '徒步', '路线', '香山', '百望山', '凤凰岭',
-      '妙峰山', '雾灵山', '长城', '白虎涧', '难度', '时间',
-      '距离', '新手', '推荐', '路线',
+      '爬',
+      '登山',
+      '徒步',
+      '路线',
+      '香山',
+      '百望山',
+      '凤凰岭',
+      '妙峰山',
+      '雾灵山',
+      '长城',
+      '白虎涧',
+      '难度',
+      '时间',
+      '距离',
+      '新手',
+      '推荐',
+      '路线',
     ];
     final lowerContent = content.toLowerCase();
     return routeKeywords.any((keyword) => lowerContent.contains(keyword));
@@ -275,7 +289,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
     // 解析难度偏好
     String? preferredDifficulty;
-    if (lowerContent.contains('新手') || lowerContent.contains('简单') || lowerContent.contains('容易')) {
+    if (lowerContent.contains('新手') ||
+        lowerContent.contains('简单') ||
+        lowerContent.contains('容易')) {
       preferredDifficulty = '新手/简单';
     } else if (lowerContent.contains('中级') || lowerContent.contains('一般')) {
       preferredDifficulty = '中级/一般';
@@ -339,7 +355,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final maxTemp = weatherData.maxTemp;
       final minTemp = weatherData.minTemp;
       if (maxTemp != null && minTemp != null) {
-        buffer.writeln('- 最高/最低: ${maxTemp.toStringAsFixed(0)}°C / ${minTemp.toStringAsFixed(0)}°C');
+        buffer.writeln(
+            '- 最高/最低: ${maxTemp.toStringAsFixed(0)}°C / ${minTemp.toStringAsFixed(0)}°C');
       }
       buffer.writeln('- 风速: ${weatherData.windSpeed.toStringAsFixed(0)} km/h');
       buffer.writeln('- 爬山建议: ${weatherData.hikingAdvice}');
@@ -472,7 +489,8 @@ final chatNotifierProvider =
 });
 
 // 导入路线推荐 Provider
-final routeRecommendationUseCaseProvider = Provider<RouteRecommendationUseCase>((ref) {
+final routeRecommendationUseCaseProvider =
+    Provider<RouteRecommendationUseCase>((ref) {
   final datasource = RouteLocalDatasource();
   return RouteRecommendationUseCase(datasource);
 });

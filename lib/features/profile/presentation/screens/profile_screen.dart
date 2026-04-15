@@ -64,7 +64,8 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-void _showSimpleDialog(BuildContext context, {required String title, required String content}) {
+void _showSimpleDialog(BuildContext context,
+    {required String title, required String content}) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
@@ -179,8 +180,7 @@ class _StatsGrid extends ConsumerWidget {
         final distanceText = totalDistance >= 1000
             ? (totalDistance / 1000).toStringAsFixed(1)
             : totalDistance.toStringAsFixed(0);
-        final distanceLabel =
-            totalDistance >= 1000 ? '累计公里' : '累计米数';
+        final distanceLabel = totalDistance >= 1000 ? '累计公里' : '累计米数';
 
         return GridView.count(
           crossAxisCount: 3,
@@ -283,8 +283,7 @@ class _FeatureList extends ConsumerWidget {
           const Divider(height: 1),
           achievementsAsync.when(
             data: (achievements) {
-              final unlocked =
-                  achievements.where((a) => a.isUnlocked).length;
+              final unlocked = achievements.where((a) => a.isUnlocked).length;
               return _FeatureItem(
                 icon: Icons.emoji_events,
                 title: '成就徽章',
@@ -310,9 +309,8 @@ class _FeatureList extends ConsumerWidget {
             data: (favorites) => _FeatureItem(
               icon: Icons.bookmark,
               title: '收藏路线',
-              subtitle: favorites.isEmpty
-                  ? '暂无收藏路线'
-                  : '已收藏 ${favorites.length} 条路线',
+              subtitle:
+                  favorites.isEmpty ? '暂无收藏路线' : '已收藏 ${favorites.length} 条路线',
               onTap: () => context.push('/favorites'),
             ),
             loading: () => const _FeatureItem(
@@ -419,7 +417,8 @@ class _AboutSection extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.description_outlined),
             title: const Text('用户协议'),
-            trailing: const Icon(Icons.chevron_right, color: AppColors.textHint),
+            trailing:
+                const Icon(Icons.chevron_right, color: AppColors.textHint),
             onTap: () => _showSimpleDialog(
               context,
               title: '用户协议',
@@ -433,7 +432,8 @@ class _AboutSection extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('隐私政策'),
-            trailing: const Icon(Icons.chevron_right, color: AppColors.textHint),
+            trailing:
+                const Icon(Icons.chevron_right, color: AppColors.textHint),
             onTap: () => _showSimpleDialog(
               context,
               title: '隐私政策',

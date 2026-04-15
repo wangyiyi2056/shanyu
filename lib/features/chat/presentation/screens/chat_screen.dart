@@ -141,8 +141,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       itemCount: state.messages.length,
       itemBuilder: (context, index) {
         final message = state.messages[index];
-        final showAvatar = index == 0 ||
-            state.messages[index - 1].role != message.role;
+        final showAvatar =
+            index == 0 || state.messages[index - 1].role != message.role;
 
         return ChatBubble(
           message: message,

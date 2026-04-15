@@ -24,9 +24,9 @@ class RouteSeasonsCard extends StatelessWidget {
           Text(
             '最佳季节: ${route.bestSeasons.join('、')}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.success,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ],
       ),

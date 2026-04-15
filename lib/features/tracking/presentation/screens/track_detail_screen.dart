@@ -173,7 +173,6 @@ class _TrackDetailView extends StatelessWidget {
       ],
     );
   }
-
 }
 
 class _TrackMap extends StatelessWidget {

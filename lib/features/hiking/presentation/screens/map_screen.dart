@@ -91,7 +91,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       _routes = List.from(_allRoutes);
     } else {
       _routes = _allRoutes
-          .where((rec) => _selectedDifficulties.contains(rec.route.difficultyLabel))
+          .where((rec) =>
+              _selectedDifficulties.contains(rec.route.difficultyLabel))
           .toList();
     }
   }
@@ -290,8 +291,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               right: AppSpacing.md,
               child: RecordingStatusPanel(
                 state: recorderState,
-                onPause: () => ref.read(trackRecorderProvider.notifier).pauseRecording(),
-                onResume: () => ref.read(trackRecorderProvider.notifier).resumeRecording(),
+                onPause: () =>
+                    ref.read(trackRecorderProvider.notifier).pauseRecording(),
+                onResume: () =>
+                    ref.read(trackRecorderProvider.notifier).resumeRecording(),
               ),
             ),
 
@@ -363,8 +366,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                                     final rec = _routes[index];
                                     return NearbyRouteItem(
                                       route: rec.route,
-                                      onTap: () =>
-                                          _openRouteDetail(rec.route),
+                                      onTap: () => _openRouteDetail(rec.route),
                                     );
                                   },
                                 ),

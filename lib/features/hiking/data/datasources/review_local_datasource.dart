@@ -41,7 +41,8 @@ class ReviewLocalDatasource {
     final prefs = await _prefs;
     final reviews = await getAllReviews();
     reviews.add(review);
-    await prefs.setString(_reviewsKey, jsonEncode(reviews.map((r) => r.toJson()).toList()));
+    await prefs.setString(
+        _reviewsKey, jsonEncode(reviews.map((r) => r.toJson()).toList()));
     return review;
   }
 
@@ -50,7 +51,8 @@ class ReviewLocalDatasource {
     final prefs = await _prefs;
     final reviews = await getAllReviews();
     reviews.removeWhere((r) => r.id == reviewId);
-    await prefs.setString(_reviewsKey, jsonEncode(reviews.map((r) => r.toJson()).toList()));
+    await prefs.setString(
+        _reviewsKey, jsonEncode(reviews.map((r) => r.toJson()).toList()));
   }
 
   /// 获取某路线的平均评分
@@ -95,7 +97,8 @@ class ReviewLocalDatasource {
       routeId: routeId,
       createdAt: DateTime.now(),
     ));
-    await prefs.setString(_favoritesKey, jsonEncode(favorites.map((f) => f.toJson()).toList()));
+    await prefs.setString(
+        _favoritesKey, jsonEncode(favorites.map((f) => f.toJson()).toList()));
   }
 
   /// 取消收藏
@@ -103,7 +106,8 @@ class ReviewLocalDatasource {
     final prefs = await _prefs;
     final favorites = await getAllFavorites();
     favorites.removeWhere((f) => f.routeId == routeId);
-    await prefs.setString(_favoritesKey, jsonEncode(favorites.map((f) => f.toJson()).toList()));
+    await prefs.setString(
+        _favoritesKey, jsonEncode(favorites.map((f) => f.toJson()).toList()));
   }
 
   /// 切换收藏状态

@@ -166,13 +166,17 @@ class _FavoriteRouteCard extends StatelessWidget {
                           ),
                           child: Text(
                             route.difficultyLabel,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
                                   color: _difficultyColor,
                                 ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.star, size: 14, color: AppColors.warning),
+                        const Icon(Icons.star,
+                            size: 14, color: AppColors.warning),
                         const SizedBox(width: 2),
                         Text(
                           route.rating.toString(),
