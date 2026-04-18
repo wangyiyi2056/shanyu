@@ -354,7 +354,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     // 添加天气信息
     if (weatherData != null) {
       buffer.writeln('## 当前天气信息');
-      buffer.writeln('${weatherData.iconEmoji} ${weatherData.description}');
+      buffer.writeln('天气: ${weatherData.description}');
       buffer.writeln('- 当前温度: ${weatherData.temperature.toStringAsFixed(0)}°C');
       final maxTemp = weatherData.maxTemp;
       final minTemp = weatherData.minTemp;

@@ -12,9 +12,13 @@ class AppSpacing {
   static const double xxl = 48.0;
   static const double xxxl = 64.0;
 
-  // Radius
-  static const double radiusSm = 4.0;
-  static const double radiusMd = 8.0;
+  // Clean mobile borders
+  static const double border = 1.0;
+  static const double borderThick = 2.0;
+
+  // Radius - mobile friendly
+  static const double radiusSm = 8.0;
+  static const double radiusMd = 12.0;
   static const double radiusLg = 16.0;
   static const double radiusXl = 24.0;
   static const double radiusFull = 999.0;

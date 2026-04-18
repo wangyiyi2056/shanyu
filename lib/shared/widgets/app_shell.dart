@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
-import 'package:hiking_assistant/core/theme/app_spacing.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -32,80 +31,90 @@ class _BottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _calculateSelectedIndex(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SafeArea(
       child: Container(
-        margin: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          0,
-          AppSpacing.md,
-          AppSpacing.md,
-        ),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          border: Border.all(
-            color: isDark
-                ? AppColors.darkSurfaceElevated
-                : AppColors.primaryLighter,
-            width: 1.5,
+          color: Colors.white,
+          border: Border(
+            top: BorderSide(color: AppColors.paperDark),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadowMedium.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+        ),
+        child: Row(
+          children: [
+            _NavItem(
+              icon: Icons.home_rounded,
+              label: '首页',
+              isActive: selectedIndex == 0,
+              onTap: () => context.go('/home'),
+            ),
+            _NavItem(
+              icon: Icons.map_rounded,
+              label: '地图',
+              isActive: selectedIndex == 1,
+              onTap: () => context.go('/map'),
+            ),
+            _NavItem(
+              icon: Icons.chat_bubble_rounded,
+              label: '助手',
+              isActive: selectedIndex == 2,
+              onTap: () => context.go('/chat'),
+            ),
+            _NavItem(
+              icon: Icons.person_rounded,
+              label: '我的',
+              isActive: selectedIndex == 3,
+              onTap: () => context.go('/profile'),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          child: NavigationBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            selectedIndex: selectedIndex,
-            indicatorColor: isDark
-                ? AppColors.primary.withValues(alpha: 0.25)
-                : AppColors.primaryLighter,
-            onDestinationSelected: (index) {
-              switch (index) {
-                case 0:
-                  context.go('/home');
-                  break;
-                case 1:
-                  context.go('/map');
-                  break;
-                case 2:
-                  context.go('/chat');
-                  break;
-                case 3:
-                  context.go('/profile');
-                  break;
-              }
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: '首页',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.map_outlined),
-                selectedIcon: Icon(Icons.map),
-                label: '地图',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.chat_bubble_outline),
-                selectedIcon: Icon(Icons.chat_bubble),
-                label: '助手',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
-                label: '我的',
-              ),
-            ],
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: isActive ? AppColors.forest : AppColors.inkMuted,
+                  size: 22,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                    color: isActive ? AppColors.forest : AppColors.inkMuted,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

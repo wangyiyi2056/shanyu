@@ -3,9 +3,50 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hiking_assistant/features/tracking/data/datasources/track_api_datasource.dart';
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/domain/repositories/track_repository.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
+
+class FakeTrackApiDatasource implements TrackApiDatasource {
+  final List<HikingTrack> _publicTracks = [];
+  final Map<String, List<TrackPoint>> _trackPoints = {};
+
+  void addPublicTrack(HikingTrack track) {
+    _publicTracks.add(track);
+  }
+
+  void addTrackPoints(String trackId, List<TrackPoint> points) {
+    _trackPoints[trackId] = points;
+  }
+
+  @override
+  Future<List<HikingTrack>> getAllTracks({int limit = 20, int offset = 0}) async => [];
+
+  @override
+  Future<List<HikingTrack>> getPublicTracks({int limit = 20, int offset = 0}) async => _publicTracks;
+
+  @override
+  Future<TrackWithPoints?> getPublicTrackById(String id) async {
+    final track = _publicTracks.firstWhere((t) => t.id == id, orElse: () => throw StateError('Track not found'));
+    return TrackWithPoints(track: track, points: _trackPoints[id] ?? []);
+  }
+
+  @override
+  Future<TrackWithPoints?> getTrackById(String id) async => null;
+
+  @override
+  Future<HikingTrack?> createTrack(HikingTrack track, List<TrackPoint> points) async => track;
+
+  @override
+  Future<bool> addPoints(String trackId, List<TrackPoint> points) async => true;
+
+  @override
+  Future<HikingTrack?> updateTrack(HikingTrack track) async => track;
+
+  @override
+  Future<bool> deleteTrack(String id) async => true;
+}
 
 class FakeTrackRepository implements TrackRepository {
   final _tracks = <String, HikingTrack>{};
@@ -295,14 +336,25 @@ void main() {
   });
 
   group('tracksProvider', () {
-    test('loads tracks from repository', () async {
-      final fakeRepo = FakeTrackRepository();
-      await fakeRepo.createTrack('轨迹 1');
-      await fakeRepo.createTrack('轨迹 2');
+    test('loads tracks from API datasource', () async {
+      final track1 = HikingTrack(
+        id: 'track_1',
+        name: '轨迹 1',
+        startTime: DateTime.now(),
+      );
+      final track2 = HikingTrack(
+        id: 'track_2',
+        name: '轨迹 2',
+        startTime: DateTime.now(),
+      );
+
+      final fakeApiDatasource = FakeTrackApiDatasource();
+      fakeApiDatasource.addPublicTrack(track1);
+      fakeApiDatasource.addPublicTrack(track2);
 
       final container = ProviderContainer(
         overrides: [
-          trackRepositoryProvider.overrideWithValue(fakeRepo),
+          trackApiDatasourceProvider.overrideWithValue(fakeApiDatasource),
         ],
       );
       addTearDown(container.dispose);
@@ -324,8 +376,11 @@ void main() {
         timestamp: DateTime.now(),
       ));
 
+      final fakeApiDatasource = FakeTrackApiDatasource();
+
       final container = ProviderContainer(
         overrides: [
+          trackApiDatasourceProvider.overrideWithValue(fakeApiDatasource),
           trackRepositoryProvider.overrideWithValue(fakeRepo),
         ],
       );

@@ -2,24 +2,47 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:hiking_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:hiking_assistant/features/tracking/data/datasources/track_api_datasource.dart';
 import 'package:hiking_assistant/features/tracking/data/datasources/track_local_datasource.dart';
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/domain/repositories/track_repository.dart';
 
-/// 轨迹本地数据源 Provider
+/// 轨迹 API 数据源 Provider (连接后端)
+final trackApiDatasourceProvider = Provider<TrackApiDatasource>((ref) {
+  return TrackApiDatasource.instance;
+});
+
+/// 轨迹本地数据源 Provider (本地 SQLite，用于记录)
 final trackLocalDatasourceProvider = Provider<TrackLocalDatasource>((ref) {
   return TrackLocalDatasource();
 });
 
 /// 轨迹仓储 Provider
 final trackRepositoryProvider = Provider<TrackRepository>((ref) {
-  return TrackRepositoryImpl(ref.watch(trackLocalDatasourceProvider));
+  return TrackRepositoryImpl(
+    apiDatasource: ref.watch(trackApiDatasourceProvider),
+    localDatasource: ref.watch(trackLocalDatasourceProvider),
+  );
 });
 
-/// 所有轨迹列表
+/// 所有轨迹列表 - 从后端 API 获取
 final tracksProvider = FutureProvider<List<HikingTrack>>((ref) async {
-  final repository = ref.watch(trackRepositoryProvider);
-  return repository.getAllTracks();
+  final apiDatasource = ref.watch(trackApiDatasourceProvider);
+  try {
+    // 优先获取公开轨迹（无需认证）
+    final tracks = await apiDatasource.getPublicTracks();
+    // 如果后端没有数据，返回本地存储的数据作为备选
+    if (tracks.isEmpty) {
+      final localDatasource = ref.watch(trackLocalDatasourceProvider);
+      return await localDatasource.getAllTracks();
+    }
+    return tracks;
+  } catch (e) {
+    // API 失败时，使用本地数据
+    final localDatasource = ref.watch(trackLocalDatasourceProvider);
+    return await localDatasource.getAllTracks();
+  }
 });
 
 /// 指定轨迹详情
@@ -259,6 +282,7 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
     _elapsedTimer = null;
 
     final track = state.currentTrack;
+    final points = state.points;
     if (track != null) {
       final startTime = _recordingStartTime;
       final duration = startTime != null
@@ -270,6 +294,17 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
         durationSeconds: duration,
       );
       await _repository.updateTrack(finalTrack);
+
+      // Upload to backend if authenticated
+      final authState = _ref.read(authProvider);
+      if (authState is AuthAuthenticated && points.isNotEmpty) {
+        try {
+          final apiDatasource = _ref.read(trackApiDatasourceProvider);
+          await apiDatasource.createTrack(finalTrack, points);
+        } catch (e) {
+          // Upload failed, track remains in local storage
+        }
+      }
     }
 
     _recordingStartTime = null;

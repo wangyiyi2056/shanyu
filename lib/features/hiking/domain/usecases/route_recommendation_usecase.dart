@@ -1,4 +1,5 @@
 import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
+import 'package:hiking_assistant/features/hiking/data/datasources/route_api_datasource.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 
 /// 用户偏好
@@ -64,24 +65,120 @@ class RouteRecommendation {
   });
 }
 
+/// 路线数据源抽象接口
+abstract class RouteDatasource {
+  Future<List<HikingRoute>> getAllRoutes();
+  Future<HikingRoute?> getRouteById(String id);
+  Future<List<HikingRoute>> searchRoutes(String query);
+  Future<List<HikingRoute>> getRoutesByDifficulty(String difficulty);
+  Future<List<HikingRoute>> recommendRoutes({
+    String? preferredDifficulty,
+    int? maxDuration,
+    double? maxDistance,
+    List<String>? requiredTags,
+  });
+}
+
+/// RouteApiDatasource 的适配器
+class RouteApiDatasourceAdapter implements RouteDatasource {
+  final RouteApiDatasource _api;
+
+  RouteApiDatasourceAdapter(this._api);
+
+  @override
+  Future<List<HikingRoute>> getAllRoutes() => _api.getAllRoutes();
+
+  @override
+  Future<HikingRoute?> getRouteById(String id) => _api.getRouteById(id);
+
+  @override
+  Future<List<HikingRoute>> searchRoutes(String query) => _api.searchRoutes(query);
+
+  @override
+  Future<List<HikingRoute>> getRoutesByDifficulty(String difficulty) =>
+      _api.getRoutesByDifficulty(difficulty);
+
+  @override
+  Future<List<HikingRoute>> recommendRoutes({
+    String? preferredDifficulty,
+    int? maxDuration,
+    double? maxDistance,
+    List<String>? requiredTags,
+  }) => _api.recommendRoutes(
+    preferredDifficulty: preferredDifficulty,
+    maxDuration: maxDuration,
+    maxDistance: maxDistance,
+    requiredTags: requiredTags,
+  );
+}
+
+/// RouteLocalDatasource 的适配器
+class RouteLocalDatasourceAdapter implements RouteDatasource {
+  final RouteLocalDatasource _local;
+
+  RouteLocalDatasourceAdapter(this._local);
+
+  @override
+  Future<List<HikingRoute>> getAllRoutes() => _local.getAllRoutes();
+
+  @override
+  Future<HikingRoute?> getRouteById(String id) => _local.getRouteById(id);
+
+  @override
+  Future<List<HikingRoute>> searchRoutes(String query) => _local.searchRoutes(query);
+
+  @override
+  Future<List<HikingRoute>> getRoutesByDifficulty(String difficulty) =>
+      _local.getRoutesByDifficulty(difficulty);
+
+  @override
+  Future<List<HikingRoute>> recommendRoutes({
+    String? preferredDifficulty,
+    int? maxDuration,
+    double? maxDistance,
+    List<String>? requiredTags,
+  }) => _local.recommendRoutes(
+    preferredDifficulty: preferredDifficulty,
+    maxDuration: maxDuration,
+    maxDistance: maxDistance,
+    requiredTags: requiredTags,
+  );
+}
+
 /// 路线推荐用例
 class RouteRecommendationUseCase {
-  final RouteLocalDatasource _datasource;
+  final RouteDatasource _datasource;
+  final RouteLocalDatasource? _localFallback;
 
-  RouteRecommendationUseCase(this._datasource);
+  RouteRecommendationUseCase(this._datasource, [this._localFallback]);
 
   /// 根据用户偏好推荐路线
   Future<List<RouteRecommendation>> getRecommendations({
     required RoutePreferences preferences,
     int limit = 5,
   }) async {
-    final routes = await _datasource.recommendRoutes(
-      preferredDifficulty: preferences.preferredDifficulty,
-      maxDuration: preferences.maxDuration,
-      maxDistance: preferences.maxDistance,
-      requiredTags: preferences.requiredTags,
-    );
-    return _buildRecommendations(routes, preferences, limit);
+    try {
+      final routes = await _datasource.recommendRoutes(
+        preferredDifficulty: preferences.preferredDifficulty,
+        maxDuration: preferences.maxDuration,
+        maxDistance: preferences.maxDistance,
+        requiredTags: preferences.requiredTags,
+      );
+      return _buildRecommendations(routes, preferences, limit);
+    } catch (e) {
+      // Fallback to local if API fails
+      final local = _localFallback;
+      if (local != null) {
+        final routes = await local.recommendRoutes(
+          preferredDifficulty: preferences.preferredDifficulty,
+          maxDuration: preferences.maxDuration,
+          maxDistance: preferences.maxDistance,
+          requiredTags: preferences.requiredTags,
+        );
+        return _buildRecommendations(routes, preferences, limit);
+      }
+      return [];
+    }
   }
 
   /// 同步推荐路线（用于本地数据直接加载）
@@ -89,13 +186,18 @@ class RouteRecommendationUseCase {
     required RoutePreferences preferences,
     int limit = 5,
   }) {
-    final routes = _datasource.recommendRoutesSync(
-      preferredDifficulty: preferences.preferredDifficulty,
-      maxDuration: preferences.maxDuration,
-      maxDistance: preferences.maxDistance,
-      requiredTags: preferences.requiredTags,
-    );
-    return _buildRecommendations(routes, preferences, limit);
+    // Sync method only works with local datasource
+    final local = _localFallback;
+    if (local != null) {
+      final routes = local.recommendRoutesSync(
+        preferredDifficulty: preferences.preferredDifficulty,
+        maxDuration: preferences.maxDuration,
+        maxDistance: preferences.maxDistance,
+        requiredTags: preferences.requiredTags,
+      );
+      return _buildRecommendations(routes, preferences, limit);
+    }
+    return [];
   }
 
   List<RouteRecommendation> _buildRecommendations(

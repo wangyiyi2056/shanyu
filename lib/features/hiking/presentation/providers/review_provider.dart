@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hiking_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:hiking_assistant/features/hiking/data/datasources/review_local_datasource.dart';
+import 'package:hiking_assistant/features/hiking/data/datasources/route_api_datasource.dart';
 import 'package:hiking_assistant/features/hiking/data/models/review_model.dart';
 import 'package:hiking_assistant/features/hiking/domain/repositories/review_repository.dart';
 
@@ -8,12 +10,31 @@ final reviewLocalDatasourceProvider = Provider<ReviewLocalDatasource>((ref) {
   return ReviewLocalDatasource();
 });
 
-/// 评价仓储 Provider
-final reviewRepositoryProvider = Provider<ReviewRepository>((ref) {
-  return ReviewRepositoryImpl(ref.watch(reviewLocalDatasourceProvider));
+/// 所有收藏 Provider (from local storage)
+final allFavoritesProvider = FutureProvider<List<RouteFavorite>>((ref) async {
+  final localDatasource = ref.watch(reviewLocalDatasourceProvider);
+  return localDatasource.getAllFavorites();
 });
 
-/// 某路线的评价列表
+/// Route API datasource for reviews
+final routeApiDatasourceForReviewsProvider = Provider<RouteApiDatasource>((ref) {
+  return RouteApiDatasource.instance;
+});
+
+/// 评价仓储 Provider (uses API when authenticated, local otherwise)
+final reviewRepositoryProvider = Provider<ReviewRepository>((ref) {
+  final authState = ref.watch(authProvider);
+  final apiDatasource = ref.watch(routeApiDatasourceForReviewsProvider);
+  final localDatasource = ref.watch(reviewLocalDatasourceProvider);
+
+  return ReviewRepositoryImpl(
+    apiDatasource: apiDatasource,
+    localDatasource: localDatasource,
+    isAuthenticated: authState is AuthAuthenticated,
+  );
+});
+
+/// 某路线的评价列表 (from API when authenticated, local otherwise)
 final routeReviewsProvider =
     FutureProvider.family<List<RouteReview>, String>((ref, routeId) async {
   final repository = ref.watch(reviewRepositoryProvider);
@@ -34,19 +55,6 @@ final routeReviewCountProvider =
   return repository.getReviewCount(routeId);
 });
 
-/// 某路线是否已收藏
-final routeFavoriteProvider =
-    FutureProvider.family<bool, String>((ref, routeId) async {
-  final repository = ref.watch(reviewRepositoryProvider);
-  return repository.isFavorite(routeId);
-});
-
-/// 所有收藏
-final allFavoritesProvider = FutureProvider<List<RouteFavorite>>((ref) async {
-  final repository = ref.watch(reviewRepositoryProvider);
-  return repository.getAllFavorites();
-});
-
 /// 评价操作 Notifier
 class ReviewActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final ReviewRepository _repository;
@@ -55,7 +63,7 @@ class ReviewActionsNotifier extends StateNotifier<AsyncValue<void>> {
   ReviewActionsNotifier(this._repository, this._ref)
       : super(const AsyncValue.data(null));
 
-  /// 提交评价
+  /// 提交评价 (to API when authenticated, local otherwise)
   Future<void> submitReview({
     required String routeId,
     required double rating,
@@ -64,32 +72,11 @@ class ReviewActionsNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final review = RouteReview(
-        id: '${DateTime.now().millisecondsSinceEpoch}',
-        routeId: routeId,
-        rating: rating,
-        comment: comment,
-        authorName: authorName,
-        createdAt: DateTime.now(),
-      );
-      await _repository.addReview(review);
+      await _repository.addReview(routeId, rating, comment, authorName);
       _ref.invalidate(routeReviewsProvider(routeId));
       _ref.invalidate(routeAverageRatingProvider(routeId));
       _ref.invalidate(routeReviewCountProvider(routeId));
     });
-  }
-
-  /// 切换收藏
-  Future<bool> toggleFavorite(String routeId) async {
-    state = const AsyncValue.loading();
-    final result = await AsyncValue.guard(() async {
-      final isFav = await _repository.toggleFavorite(routeId);
-      _ref.invalidate(routeFavoriteProvider(routeId));
-      _ref.invalidate(allFavoritesProvider);
-      return isFav;
-    });
-    state = result;
-    return result.valueOrNull ?? false;
   }
 
   /// 删除评价

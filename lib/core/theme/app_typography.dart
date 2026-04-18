@@ -1,122 +1,96 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 
 class AppTypography {
   AppTypography._();
 
-  static const String fontFamily = 'NotoSansSC';
-  static const String fontFamilyMono = 'RobotoMono';
+  static TextStyle get display => GoogleFonts.bebasNeue(
+        fontSize: 72,
+        letterSpacing: -0.5,
+        color: AppColors.ink,
+        height: 0.9,
+      );
 
-  static TextTheme get textTheme {
-    return const TextTheme(
-      // Display
-      displayLarge: TextStyle(
-        fontSize: 57,
-        fontWeight: FontWeight.w400,
-        letterSpacing: -0.25,
-        color: AppColors.textPrimary,
-        height: 1.1,
-      ),
-      displayMedium: TextStyle(
-        fontSize: 45,
-        fontWeight: FontWeight.w400,
-        color: AppColors.textPrimary,
-        height: 1.15,
-      ),
-      displaySmall: TextStyle(
-        fontSize: 36,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textPrimary,
-        height: 1.2,
-      ),
+  static TextStyle get displaySmall => GoogleFonts.bebasNeue(
+        fontSize: 48,
+        letterSpacing: -0.5,
+        color: AppColors.ink,
+        height: 0.95,
+      );
 
-      // Headline
-      headlineLarge: TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.2,
-      ),
-      headlineMedium: TextStyle(
+  static TextStyle get headline => GoogleFonts.oswald(
         fontSize: 28,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.25,
-      ),
-      headlineSmall: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.3,
-      ),
+        color: AppColors.ink,
+        height: 1.1,
+      );
 
-      // Title
-      titleLarge: TextStyle(
-        fontSize: 22,
+  static TextStyle get title => GoogleFonts.oswald(
+        fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
-        height: 1.3,
-      ),
-      titleMedium: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.15,
-        color: AppColors.textPrimary,
-        height: 1.4,
-      ),
-      titleSmall: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
-        color: AppColors.textPrimary,
-        height: 1.4,
-      ),
+        color: AppColors.ink,
+        height: 1.2,
+      );
 
-      // Body
-      bodyLarge: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.15,
-        color: AppColors.textPrimary,
-        height: 1.6,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.1,
-        color: AppColors.textPrimary,
-        height: 1.5,
-      ),
-      bodySmall: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0.2,
-        color: AppColors.textSecondary,
-        height: 1.5,
-      ),
-
-      // Label
-      labelLarge: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
-        color: AppColors.textPrimary,
+  static TextStyle get body => GoogleFonts.spaceGrotesk(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: AppColors.ink,
         height: 1.4,
-      ),
-      labelMedium: TextStyle(
+      );
+
+  static TextStyle get bodySmall => GoogleFonts.spaceGrotesk(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: AppColors.ink,
+        height: 1.4,
+      );
+
+  static TextStyle get label => GoogleFonts.spaceGrotesk(
         fontSize: 12,
         fontWeight: FontWeight.w600,
+        color: AppColors.ink,
         letterSpacing: 0.3,
-        color: AppColors.textPrimary,
-        height: 1.4,
-      ),
-      labelSmall: TextStyle(
+      );
+
+  static TextStyle get data => GoogleFonts.jetBrainsMono(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: AppColors.ink,
+        height: 1.2,
+      );
+
+  static TextStyle get dataSmall => GoogleFonts.jetBrainsMono(
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.3,
-        color: AppColors.textSecondary,
-        height: 1.4,
-      ),
+        color: AppColors.ink,
+        height: 1.2,
+      );
+
+  static TextStyle get button => GoogleFonts.oswald(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: AppColors.paper,
+        letterSpacing: 0.5,
+      );
+
+  static TextTheme get textTheme {
+    return TextTheme(
+      displayLarge: display,
+      displayMedium: displaySmall,
+      headlineLarge: headline.copyWith(fontSize: 32),
+      headlineMedium: headline,
+      headlineSmall: title,
+      titleLarge: title,
+      titleMedium: body.copyWith(fontWeight: FontWeight.w600),
+      titleSmall: label,
+      bodyLarge: body,
+      bodyMedium: body,
+      bodySmall: bodySmall,
+      labelLarge: button,
+      labelMedium: label,
+      labelSmall: dataSmall,
     );
   }
 }

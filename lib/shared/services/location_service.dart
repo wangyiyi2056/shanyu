@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geocoding/geocoding.dart';
@@ -101,6 +102,11 @@ class LocationService {
   /// 逆地理编码（坐标转地址）
   Future<String> _reverseGeocode(LatLng latlng) async {
     try {
+      // geocoding 在 web 平台不支持，直接返回坐标描述
+      if (kIsWeb) {
+        return '位置(${latlng.latitude.toStringAsFixed(2)}, ${latlng.longitude.toStringAsFixed(2)})';
+      }
+
       final placemarks = await placemarkFromCoordinates(
         latlng.latitude,
         latlng.longitude,

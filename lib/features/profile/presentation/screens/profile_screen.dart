@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/hiking/presentation/providers/review_provider.dart';
 import 'package:hiking_assistant/features/profile/presentation/providers/achievements_provider.dart';
 import 'package:hiking_assistant/features/profile/presentation/providers/profile_provider.dart';
@@ -14,101 +15,59 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('我的'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/settings'),
+      backgroundColor: AppColors.paper,
+      body: CustomScrollView(
+        slivers: [
+          // 护照风格头部
+          SliverToBoxAdapter(
+            child: _PassportHeader(),
           ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          // 用户信息卡片
-          const _UserInfoCard(),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: AppSpacing.xl),
 
-          const SizedBox(height: AppSpacing.lg),
+                // 统计数据
+                Text(
+                  '我的记录',
+                  style: AppTypography.title.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const _StatsGrid(),
 
-          // 统计数据
-          _SectionHeader(
-            title: '我的记录',
-            icon: Icons.insights,
-            iconColor: AppColors.primary,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          const _StatsGrid(),
+                const SizedBox(height: AppSpacing.xl),
 
-          const SizedBox(height: AppSpacing.lg),
+                // 功能列表
+                Text(
+                  '功能',
+                  style: AppTypography.title.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _FeatureList(),
 
-          // 功能列表
-          _SectionHeader(
-            title: '功能',
-            icon: Icons.apps,
-            iconColor: AppColors.secondary,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _FeatureList(),
+                const SizedBox(height: AppSpacing.xl),
 
-          const SizedBox(height: AppSpacing.lg),
+                // 关于
+                Text(
+                  '关于',
+                  style: AppTypography.title.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                const _AboutSection(),
 
-          // 关于
-          _SectionHeader(
-            title: '关于',
-            icon: Icons.info_outline,
-            iconColor: AppColors.info,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          const _AboutSection(),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Color iconColor;
-
-  const _SectionHeader({
-    required this.title,
-    required this.icon,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Row(
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                iconColor.withValues(alpha: 0.2),
-                iconColor.withValues(alpha: 0.1),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+                const SizedBox(height: AppSpacing.xl),
+              ]),
             ),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           ),
-          child: Icon(icon, color: iconColor, size: 16),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-              ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -118,8 +77,12 @@ void _showSimpleDialog(BuildContext context,
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(content),
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      title: Text(title, style: AppTypography.title),
+      content: Text(content, style: AppTypography.body),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -130,160 +93,262 @@ void _showSimpleDialog(BuildContext context,
   );
 }
 
-class _UserInfoCard extends ConsumerWidget {
-  const _UserInfoCard();
+class _PassportHeader extends ConsumerWidget {
+  const _PassportHeader();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: isDark
-            ? LinearGradient(
-                colors: [
-                  AppColors.darkSurface,
-                  AppColors.darkSurfaceVariant,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : AppColors.cardGradient,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: isDark ? AppColors.darkSurfaceElevated : AppColors.primaryLighter,
-          width: 1,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF14532D), Color(0xFF166534), Color(0xFF15803D)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight.withValues(alpha: 0.5),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(AppSpacing.radiusXl),
+          bottomRight: Radius.circular(AppSpacing.radiusXl),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: const BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary,
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.person,
-                size: 36,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.xl,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 顶部导航
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  profileAsync.when(
-                    data: (profile) => Text(
-                      profile.nickname,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
-                          ),
-                    ),
-                    loading: () => const SizedBox(
-                      height: 24,
-                      width: 100,
-                      child: Center(
-                        child: LinearProgressIndicator(minHeight: 8),
-                      ),
-                    ),
-                    error: (_, __) => Text(
-                      '爬山爱好者',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.textPrimary,
-                          ),
+                  Text(
+                    '我的护照',
+                    style: AppTypography.title.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  profileAsync.when(
-                    data: (profile) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusFull),
-                      ),
-                      child: Text(
-                        profile.levelTitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
                     ),
-                    loading: () => const SizedBox(
-                      height: 16,
-                      width: 80,
-                      child: Center(
-                        child: LinearProgressIndicator(minHeight: 6),
+                    onPressed: () => context.push('/settings'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // 用户信息
+              Row(
+                children: [
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            width: 3,
+                          ),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Colors.white24,
+                          child: Icon(
+                            Icons.person,
+                            size: 40,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
-                    error: (_, __) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 2,
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.verified,
+                            size: 14,
+                            color: AppColors.forest,
+                          ),
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusFull),
-                      ),
-                      child: Text(
-                        'Lv.1 初级选手',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
+                    ],
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        profileAsync.when(
+                          data: (profile) => Text(
+                            profile.nickname,
+                            style: AppTypography.headline.copyWith(
+                              color: Colors.white,
+                              fontSize: 22,
                             ),
+                          ),
+                          loading: () => const SizedBox(
+                            height: 24,
+                            width: 100,
+                            child: Center(
+                              child: LinearProgressIndicator(
+                                minHeight: 8,
+                                backgroundColor: Colors.white24,
+                                valueColor:
+                                    AlwaysStoppedAnimation(Colors.white70),
+                              ),
+                            ),
+                          ),
+                          error: (_, __) => Text(
+                            '爬山爱好者',
+                            style: AppTypography.headline.copyWith(
+                              color: Colors.white,
+                              fontSize: 22,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        profileAsync.when(
+                          data: (profile) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
+                            ),
+                            child: Text(
+                              profile.levelTitle,
+                              style: AppTypography.dataSmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          loading: () => const SizedBox(
+                            height: 16,
+                            width: 80,
+                            child: Center(
+                              child: LinearProgressIndicator(
+                                minHeight: 6,
+                                backgroundColor: Colors.white24,
+                                valueColor:
+                                    AlwaysStoppedAnimation(Colors.white70),
+                              ),
+                            ),
+                          ),
+                          error: (_, __) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
+                            ),
+                            child: Text(
+                              'Lv.1 初级选手',
+                              style: AppTypography.dataSmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Material(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    child: InkWell(
+                      onTap: () => context.push('/edit-profile'),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          '编辑',
+                          style: AppTypography.label.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-            OutlinedButton(
-              onPressed: () => context.push('/edit-profile'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary, width: 1.5),
+              const SizedBox(height: AppSpacing.lg),
+
+              // 护照编号条
+              Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
+                  vertical: AppSpacing.sm,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.badge_outlined,
+                      size: 16,
+                      color: Colors.white70,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'NO.',
+                      style: AppTypography.dataSmall.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '8839 2156 7742',
+                      style: AppTypography.data.copyWith(
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF4ADE80),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: const Text('编辑'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -319,25 +384,25 @@ class _StatsGrid extends ConsumerWidget {
                 icon: Icons.route,
                 value: '${tracks.length}',
                 label: '累计路线',
-                gradient: const [AppColors.primary, AppColors.primaryLight],
+                color: AppColors.forest,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _StatItem(
                 icon: Icons.terrain,
                 value: distanceText,
                 label: distanceLabel,
-                gradient: const [AppColors.secondary, AppColors.secondaryLight],
+                color: AppColors.orange,
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: _StatItem(
                 icon: Icons.trending_up,
                 value: totalElevation.toStringAsFixed(0),
                 label: '累计爬升',
-                gradient: const [AppColors.info, Color(0xFF60A5FA)],
+                color: AppColors.lavender,
               ),
             ),
           ],
@@ -361,71 +426,48 @@ class _StatItem extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
-  final List<Color> gradient;
+  final Color color;
 
   const _StatItem({
     required this.icon,
     required this.value,
     required this.label,
-    required this.gradient,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.md,
-        horizontal: AppSpacing.sm,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? AppColors.darkSurfaceElevated : AppColors.primaryLighter,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight.withValues(alpha: 0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.softShadow(blur: 12),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  gradient[0].withValues(alpha: 0.15),
-                  gradient[1].withValues(alpha: 0.08),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            child: Icon(icon, color: gradient[0], size: 20),
+            child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-                ),
+            style: AppTypography.data.copyWith(
+              color: AppColors.ink,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: isDark ? AppColors.darkTextHint : AppColors.textHint,
-                ),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.inkMuted,
+            ),
           ),
         ],
       ),
@@ -438,144 +480,90 @@ class _FeatureList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final favoritesAsync = ref.watch(allFavoritesProvider);
     final achievementsAsync = ref.watch(achievementsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: isDark ? AppColors.darkSurfaceElevated : AppColors.primaryLighter,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight.withValues(alpha: 0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: AppColors.softShadow(blur: 12),
       ),
       child: Column(
         children: [
           _FeatureItem(
             icon: Icons.history,
-            iconGradient: const [AppColors.primary, AppColors.primaryLight],
             title: '历史记录',
             subtitle: '查看所有爬山记录',
+            color: AppColors.forest,
             onTap: () => context.push('/tracks'),
           ),
-          Divider(
-            height: 1,
-            indent: 64,
-            color: isDark ? AppColors.darkSurfaceElevated : AppColors.textMuted,
-          ),
+          const Divider(height: 1, indent: 68),
           achievementsAsync.when(
             data: (achievements) {
               final unlocked = achievements.where((a) => a.isUnlocked).length;
               return _FeatureItem(
                 icon: Icons.emoji_events,
-                iconGradient: const [
-                  AppColors.secondary,
-                  AppColors.secondaryLight,
-                ],
                 title: '成就徽章',
                 subtitle: '已获得 $unlocked 个徽章',
+                color: AppColors.sun,
                 onTap: () => context.push('/achievements'),
               );
             },
-            loading: () => const _FeatureItem(
+            loading: () => _FeatureItem(
               icon: Icons.emoji_events,
-              iconGradient: [
-                AppColors.secondary,
-                AppColors.secondaryLight,
-              ],
               title: '成就徽章',
               subtitle: '加载中...',
+              color: AppColors.sun,
               onTap: null,
             ),
             error: (_, __) => _FeatureItem(
               icon: Icons.emoji_events,
-              iconGradient: const [
-                AppColors.secondary,
-                AppColors.secondaryLight,
-              ],
               title: '成就徽章',
               subtitle: '加载失败',
+              color: AppColors.sun,
               onTap: () => context.push('/achievements'),
             ),
           ),
-          Divider(
-            height: 1,
-            indent: 64,
-            color: isDark ? AppColors.darkSurfaceElevated : AppColors.textMuted,
-          ),
+          const Divider(height: 1, indent: 68),
           favoritesAsync.when(
             data: (favorites) => _FeatureItem(
               icon: Icons.bookmark,
-              iconGradient: const [AppColors.accentRose, Color(0xFFFB923C)],
               title: '收藏路线',
               subtitle: favorites.isEmpty
                   ? '暂无收藏路线'
                   : '已收藏 ${favorites.length} 条路线',
+              color: AppColors.forest,
               onTap: () => context.push('/favorites'),
             ),
-            loading: () => const _FeatureItem(
+            loading: () => _FeatureItem(
               icon: Icons.bookmark,
-              iconGradient: [AppColors.accentRose, Color(0xFFFB923C)],
               title: '收藏路线',
               subtitle: '加载中...',
+              color: AppColors.forest,
               onTap: null,
             ),
             error: (_, __) => const _FeatureItem(
               icon: Icons.bookmark,
-              iconGradient: [AppColors.accentRose, Color(0xFFFB923C)],
               title: '收藏路线',
               subtitle: '加载失败',
+              color: AppColors.forest,
               onTap: null,
             ),
           ),
-          Divider(
-            height: 1,
-            indent: 64,
-            color: isDark ? AppColors.darkSurfaceElevated : AppColors.textMuted,
-          ),
+          const Divider(height: 1, indent: 68),
           _FeatureItem(
             icon: Icons.notifications_outlined,
-            iconGradient: const [AppColors.accentViolet, Color(0xFFA78BFA)],
             title: '通知设置',
             subtitle: '推送和提醒',
+            color: AppColors.lavender,
             onTap: () => context.push('/settings'),
           ),
-          Divider(
-            height: 1,
-            indent: 64,
-            color: isDark ? AppColors.darkSurfaceElevated : AppColors.textMuted,
-          ),
+          const Divider(height: 1, indent: 68),
           _FeatureItem(
             icon: Icons.help_outline,
-            iconGradient: const [AppColors.info, Color(0xFF60A5FA)],
             title: '帮助与反馈',
             subtitle: '常见问题、联系客服',
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('帮助与反馈'),
-                  content: const Text(
-                    '如有问题或建议，请通过以下方式联系我们：\n\n'
-                    '邮箱: support@hiking-assistant.app\n\n'
-                    '我们会尽快回复您。',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('知道了'),
-                    ),
-                  ],
-                ),
-              );
-            },
+            color: AppColors.inkMuted,
+            onTap: () => context.push('/help'),
           ),
         ],
       ),
@@ -585,29 +573,26 @@ class _FeatureList extends ConsumerWidget {
 
 class _FeatureItem extends StatelessWidget {
   final IconData icon;
-  final List<Color> iconGradient;
   final String title;
   final String subtitle;
+  final Color color;
   final VoidCallback? onTap;
 
   const _FeatureItem({
     required this.icon,
-    required this.iconGradient,
     required this.title,
     required this.subtitle,
+    required this.color,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
@@ -616,53 +601,39 @@ class _FeatureItem extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      iconGradient[0].withValues(alpha: 0.15),
-                      iconGradient[1].withValues(alpha: 0.08),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: Icon(icon, color: iconGradient[0], size: 20),
+                child: Icon(icon, color: color, size: 22),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 15,
+                      style: AppTypography.body.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.textPrimary,
                       ),
                     ),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.textSecondary,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.inkMuted,
                       ),
                     ),
                   ],
                 ),
               ),
               if (onTap != null)
-                Icon(
-                  Icons.chevron_right,
-                  color: isDark ? AppColors.darkTextHint : AppColors.textHint,
-                ),
+                const Icon(Icons.chevron_right,
+                    color: AppColors.inkMuted, size: 22)
+              else
+                const SizedBox(width: 22),
             ],
           ),
         ),
@@ -676,136 +647,128 @@ class _AboutSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: isDark ? AppColors.darkSurfaceElevated : AppColors.primaryLighter,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight.withValues(alpha: 0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: AppColors.softShadow(blur: 12),
       ),
       child: Column(
         children: [
-          _AboutItem(
-            icon: Icons.info_outline,
-            iconColor: AppColors.textSecondary,
-            title: '版本',
-            trailing: Text(
-              'v1.0.0',
-              style: TextStyle(
-                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.paperDark,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  child: const Icon(
+                    Icons.info_outline,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Text('版本', style: AppTypography.body),
+                const Spacer(),
+                Text(
+                  'v1.0.0',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.inkMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _showSimpleDialog(
+                context,
+                title: '用户协议',
+                content: '欢迎使用爬山助手！\n\n'
+                    '1. 本应用提供的路线信息仅供参考，实际出行请以现场情况为准。\n'
+                    '2. 户外活动具有一定风险，请根据自身条件选择合适的路线。\n'
+                    '3. 使用本应用即表示您同意我们的服务条款。',
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.paperDark,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: const Icon(
+                        Icons.description_outlined,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Text('用户协议', style: AppTypography.body),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right,
+                        color: AppColors.inkMuted, size: 22),
+                  ],
+                ),
               ),
             ),
           ),
-          Divider(
-            height: 1,
-            indent: 56,
-            color: isDark ? AppColors.darkSurfaceElevated : AppColors.textMuted,
-          ),
-          _AboutItem(
-            icon: Icons.description_outlined,
-            iconColor: AppColors.textSecondary,
-            title: '用户协议',
-            onTap: () => _showSimpleDialog(
-              context,
-              title: '用户协议',
-              content: '欢迎使用爬山助手！\n\n'
-                  '1. 本应用提供的路线信息仅供参考，实际出行请以现场情况为准。\n'
-                  '2. 户外活动具有一定风险，请根据自身条件选择合适的路线。\n'
-                  '3. 使用本应用即表示您同意我们的服务条款。',
-            ),
-          ),
-          Divider(
-            height: 1,
-            indent: 56,
-            color: isDark ? AppColors.darkSurfaceElevated : AppColors.textMuted,
-          ),
-          _AboutItem(
-            icon: Icons.privacy_tip_outlined,
-            iconColor: AppColors.textSecondary,
-            title: '隐私政策',
-            onTap: () => _showSimpleDialog(
-              context,
-              title: '隐私政策',
-              content: '我们重视您的隐私。\n\n'
-                  '1. 本应用仅在本地存储您的轨迹数据、评价和收藏信息。\n'
-                  '2. 位置信息仅用于路线推荐和轨迹记录功能。\n'
-                  '3. 我们不会将您的个人数据上传至第三方服务器。',
+          const Divider(height: 1),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _showSimpleDialog(
+                context,
+                title: '隐私政策',
+                content: '我们重视您的隐私。\n\n'
+                    '1. 本应用仅在本地存储您的轨迹数据、评价和收藏信息。\n'
+                    '2. 位置信息仅用于路线推荐和轨迹记录功能。\n'
+                    '3. 我们不会将您的个人数据上传至第三方服务器。',
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.paperDark,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: const Icon(
+                        Icons.privacy_tip_outlined,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Text('隐私政策', style: AppTypography.body),
+                    const Spacer(),
+                    const Icon(Icons.chevron_right,
+                        color: AppColors.inkMuted, size: 22),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AboutItem extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-
-  const _AboutItem({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    this.trailing,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: iconColor, size: 22),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              if (trailing != null)
-                trailing!
-              else if (onTap != null)
-                Icon(
-                  Icons.chevron_right,
-                  color: isDark ? AppColors.darkTextHint : AppColors.textHint,
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }

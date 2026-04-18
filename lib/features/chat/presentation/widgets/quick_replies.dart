@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 
 class QuickReplies extends StatelessWidget {
-  final Function(String)? onReplySelected;
+  final Function(String)? onSelect;
 
-  const QuickReplies({
-    super.key,
-    this.onReplySelected,
-  });
+  const QuickReplies({super.key, this.onSelect});
 
   static const _replies = [
     '附近有什么山可以爬？',
@@ -31,9 +29,7 @@ class QuickReplies extends StatelessWidget {
         children: _replies.map((reply) {
           return _QuickReplyChip(
             label: reply,
-            onTap: onReplySelected != null
-                ? () => onReplySelected!(reply)
-                : null,
+            onTap: onSelect != null ? () => onSelect!(reply) : null,
           );
         }).toList(),
       ),
@@ -41,67 +37,52 @@ class QuickReplies extends StatelessWidget {
   }
 }
 
-class _QuickReplyChip extends StatelessWidget {
+class _QuickReplyChip extends StatefulWidget {
   final String label;
   final VoidCallback? onTap;
 
-  const _QuickReplyChip({
-    required this.label,
-    this.onTap,
-  });
+  const _QuickReplyChip({required this.label, this.onTap});
+
+  @override
+  State<_QuickReplyChip> createState() => _QuickReplyChipState();
+}
+
+class _QuickReplyChipState extends State<_QuickReplyChip> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+    return GestureDetector(
+      onTapDown: widget.onTap != null ? (_) => setState(() => _isPressed = true) : null,
+      onTapUp: widget.onTap != null
+          ? (_) {
+              setState(() => _isPressed = false);
+              widget.onTap!();
+            }
+          : null,
+      onTapCancel: widget.onTap != null ? () => setState(() => _isPressed = false) : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: _isPressed
+              ? AppColors.forest.withValues(alpha: 0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(
+            color: _isPressed
+                ? AppColors.forest
+                : const Color(0xFFD6D3D1),
           ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDark
-                  ? [
-                      AppColors.darkSurfaceVariant,
-                      AppColors.darkSurface,
-                    ]
-                  : [
-                      AppColors.surface,
-                      AppColors.surfaceVariant,
-                    ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            border: Border.all(
-              color: isDark
-                  ? AppColors.darkSurfaceElevated
-                  : AppColors.primaryLighter,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowLight.withValues(alpha: 0.4),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
+        ),
+        child: Text(
+          widget.label,
+          style: AppTypography.bodySmall.copyWith(
+            color: _isPressed ? AppColors.forest : AppColors.inkLight,
+            fontWeight: _isPressed ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
       ),

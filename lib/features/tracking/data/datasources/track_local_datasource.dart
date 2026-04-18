@@ -1,6 +1,7 @@
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 
 /// 轨迹本地数据源（SQLite）
@@ -27,6 +28,11 @@ class TrackLocalDatasource {
   }
 
   Future<Database> _initDatabase() async {
+    // Web 平台使用 sqflite_common_ffi_web
+    if (kIsWeb) {
+      databaseFactory = databaseFactoryFfiWeb;
+    }
+
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'hiking_tracks.db');
 

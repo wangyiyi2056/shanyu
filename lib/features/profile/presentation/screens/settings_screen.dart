@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/profile/data/datasources/settings_local_datasource.dart';
 import 'package:hiking_assistant/features/profile/presentation/providers/settings_provider.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
@@ -16,8 +17,12 @@ class SettingsScreen extends ConsumerWidget {
     final notificationsAsync = ref.watch(notificationsEnabledProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: const Text('设置'),
+        backgroundColor: AppColors.paper,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+        title: Text('设置', style: AppTypography.title),
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -25,29 +30,37 @@ class SettingsScreen extends ConsumerWidget {
           // 外观设置
           Text(
             '外观',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: AppTypography.title.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Card(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              boxShadow: AppColors.softShadow(blur: 12),
+            ),
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.brightness_medium),
-                  title: const Text('主题模式'),
-                  subtitle: Text(
-                    themeAsync.when(
-                      data: (mode) => switch (mode) {
-                        ThemeMode.light => '浅色',
-                        ThemeMode.dark => '深色',
-                        ThemeMode.system => '跟随系统',
-                      },
-                      loading: () => '加载中...',
-                      error: (_, __) => '加载失败',
-                    ),
+                _SettingsTile(
+                  icon: Icons.brightness_medium,
+                  iconColor: AppColors.sun,
+                  title: '主题模式',
+                  subtitle: themeAsync.when(
+                    data: (mode) => switch (mode) {
+                      ThemeMode.light => '浅色',
+                      ThemeMode.dark => '深色',
+                      ThemeMode.system => '跟随系统',
+                    },
+                    loading: () => '加载中...',
+                    error: (_, __) => '加载失败',
                   ),
-                  trailing: const Icon(Icons.chevron_right),
                   onTap: () => _showThemeModeDialog(
-                      context, ref, themeAsync.valueOrNull ?? ThemeMode.system),
+                    context,
+                    ref,
+                    themeAsync.valueOrNull ?? ThemeMode.system,
+                  ),
                 ),
               ],
             ),
@@ -58,16 +71,45 @@ class SettingsScreen extends ConsumerWidget {
           // 通知设置
           Text(
             '通知',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: AppTypography.title.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Card(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              boxShadow: AppColors.softShadow(blur: 12),
+            ),
             child: Column(
               children: [
                 SwitchListTile(
-                  secondary: const Icon(Icons.notifications_outlined),
-                  title: const Text('接收通知'),
-                  subtitle: const Text('活动和推荐提醒'),
+                  secondary: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.lavender.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_outlined,
+                      color: AppColors.lavender,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    '接收通知',
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '活动和推荐提醒',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.inkMuted,
+                    ),
+                  ),
                   value: notificationsAsync.valueOrNull ?? true,
                   onChanged: notificationsAsync.isLoading
                       ? null
@@ -87,17 +129,24 @@ class SettingsScreen extends ConsumerWidget {
           // 数据管理
           Text(
             '数据管理',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: AppTypography.title.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Card(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              boxShadow: AppColors.softShadow(blur: 12),
+            ),
             child: Column(
               children: [
-                ListTile(
-                  leading:
-                      const Icon(Icons.delete_outline, color: AppColors.error),
-                  title: const Text('清除所有轨迹数据'),
-                  subtitle: const Text('删除本地保存的所有轨迹记录'),
+                _SettingsTile(
+                  icon: Icons.delete_outline,
+                  iconColor: AppColors.error,
+                  title: '清除所有轨迹数据',
+                  subtitle: '删除本地保存的所有轨迹记录',
                   onTap: () => _showClearTracksDialog(context, ref),
                 ),
               ],
@@ -109,15 +158,23 @@ class SettingsScreen extends ConsumerWidget {
           // 账户
           Text(
             '账户',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: AppTypography.title.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Card(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              boxShadow: AppColors.softShadow(blur: 12),
+            ),
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.logout, color: AppColors.error),
-                  title: const Text('退出登录'),
+                _SettingsTile(
+                  icon: Icons.logout,
+                  iconColor: AppColors.error,
+                  title: '退出登录',
                   onTap: () => _showLogoutDialog(context),
                 ),
               ],
@@ -129,26 +186,33 @@ class SettingsScreen extends ConsumerWidget {
           // 关于
           Text(
             '关于',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: AppTypography.title.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Card(
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              boxShadow: AppColors.softShadow(blur: 12),
+            ),
             child: Column(
               children: [
-                const ListTile(
-                  leading: Icon(Icons.info_outline),
-                  title: Text('版本'),
+                const _SettingsTile(
+                  icon: Icons.info_outline,
+                  iconColor: AppColors.ink,
+                  title: '版本',
                   trailing: Text(
                     'v1.0.0',
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: AppColors.inkMuted),
                   ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.description_outlined),
-                  title: const Text('用户协议'),
-                  trailing: const Icon(Icons.chevron_right,
-                      color: AppColors.textHint),
+                const Divider(height: 1, indent: 68),
+                _SettingsTile(
+                  icon: Icons.description_outlined,
+                  iconColor: AppColors.ink,
+                  title: '用户协议',
                   onTap: () => _showSimpleDialog(
                     context,
                     title: '用户协议',
@@ -158,12 +222,11 @@ class SettingsScreen extends ConsumerWidget {
                         '3. 使用本应用即表示您同意我们的服务条款。',
                   ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.privacy_tip_outlined),
-                  title: const Text('隐私政策'),
-                  trailing: const Icon(Icons.chevron_right,
-                      color: AppColors.textHint),
+                const Divider(height: 1, indent: 68),
+                _SettingsTile(
+                  icon: Icons.privacy_tip_outlined,
+                  iconColor: AppColors.ink,
+                  title: '隐私政策',
                   onTap: () => _showSimpleDialog(
                     context,
                     title: '隐私政策',
@@ -186,7 +249,11 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择主题'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        title: Text('选择主题', style: AppTypography.title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -227,8 +294,12 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('退出登录'),
-        content: const Text('确定要退出登录吗？'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        title: Text('退出登录', style: AppTypography.title),
+        content: Text('确定要退出登录吗？', style: AppTypography.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -250,14 +321,24 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('清除轨迹数据'),
-        content: const Text('确定要删除所有轨迹记录吗？此操作不可恢复。'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        title: Text('清除轨迹数据', style: AppTypography.title),
+        content: Text(
+          '确定要删除所有轨迹记录吗？此操作不可恢复。',
+          style: AppTypography.body,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('取消'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
             onPressed: () async {
               Navigator.of(dialogContext).pop();
               await ref.read(trackRepositoryProvider).clearAllTracks();
@@ -280,8 +361,12 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        title: Text(title, style: AppTypography.title),
+        content: Text(content, style: AppTypography.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -309,10 +394,87 @@ class _ThemeModeOption extends StatelessWidget {
     return ListTile(
       leading: Icon(
         selected ? Icons.check_circle : Icons.circle_outlined,
-        color: selected ? AppColors.primary : AppColors.textHint,
+        color: selected ? AppColors.forest : AppColors.inkMuted,
       ),
-      title: Text(title),
+      title: Text(title, style: AppTypography.body),
       onTap: onTap,
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.body.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.inkMuted,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              trailing ??
+                  (onTap != null
+                      ? const Icon(
+                          Icons.chevron_right,
+                          color: AppColors.inkMuted,
+                          size: 22,
+                        )
+                      : const SizedBox(width: 22)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/chat/domain/entities/message.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -16,7 +17,6 @@ class ChatBubble extends StatelessWidget {
   });
 
   bool get isUser => message.role == MessageRole.user;
-  bool get isSystem => message.role == MessageRole.system;
 
   @override
   Widget build(BuildContext context) {
@@ -30,14 +30,25 @@ class ChatBubble extends StatelessWidget {
           // AI 头像
           if (!isUser) ...[
             if (showAvatar)
-              _Avatar(
-                icon: isSystem ? Icons.info_outline : Icons.terrain,
-                gradientColors: isSystem
-                    ? const [AppColors.secondary, AppColors.secondaryLight]
-                    : const [AppColors.primary, AppColors.primaryLight],
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.forest, AppColors.forestLight],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: const Icon(
+                  Icons.terrain,
+                  size: 18,
+                  color: Colors.white,
+                ),
               )
             else
-              const SizedBox(width: 36),
+              const SizedBox(width: 32),
             const SizedBox(width: AppSpacing.sm),
           ],
 
@@ -52,39 +63,27 @@ class ChatBubble extends StatelessWidget {
                 vertical: AppSpacing.sm,
               ),
               decoration: BoxDecoration(
-                gradient: isUser
-                    ? const LinearGradient(
-                        colors: [AppColors.primary, AppColors.primaryDark],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : null,
-                color: isUser
-                    ? null
-                    : (isSystem
-                        ? AppColors.systemBubble
-                        : AppColors.aiBubble),
+                color: isUser ? AppColors.userBubble : AppColors.aiBubble,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(AppSpacing.radiusLg),
                   topRight: const Radius.circular(AppSpacing.radiusLg),
-                  bottomLeft:
-                      Radius.circular(isUser ? AppSpacing.radiusLg : 6),
+                  bottomLeft: Radius.circular(isUser ? AppSpacing.radiusLg : 4),
                   bottomRight:
-                      Radius.circular(isUser ? 6 : AppSpacing.radiusLg),
+                      Radius.circular(isUser ? 4 : AppSpacing.radiusLg),
                 ),
                 boxShadow: isUser
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.2),
+                          color: AppColors.forest.withValues(alpha: 0.2),
                           blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          offset: const Offset(0, 3),
                         ),
                       ]
                     : [
                         BoxShadow(
-                          color: AppColors.shadowLight,
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
+                          color: AppColors.ink.withValues(alpha: 0.04),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
                         ),
                       ],
               ),
@@ -98,72 +97,65 @@ class ChatBubble extends StatelessWidget {
                     onTapLink: (text, href, title) =>
                         _handleLinkTap(context, href),
                     styleSheet: MarkdownStyleSheet(
-                      p: TextStyle(
-                        fontSize: 15,
+                      p: AppTypography.body.copyWith(
                         height: 1.55,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
-                      h1: TextStyle(
+                      h1: AppTypography.headline.copyWith(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
-                        height: 1.3,
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
-                      h2: TextStyle(
+                      h2: AppTypography.title.copyWith(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
-                        height: 1.35,
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
-                      h3: TextStyle(
+                      h3: AppTypography.title.copyWith(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
-                        height: 1.4,
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
-                      strong: TextStyle(
+                      strong: AppTypography.body.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
-                      em: TextStyle(
+                      em: AppTypography.body.copyWith(
                         fontStyle: FontStyle.italic,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
                       code: TextStyle(
                         backgroundColor: isUser
                             ? Colors.white.withValues(alpha: 0.2)
-                            : AppColors.textSecondary.withValues(alpha: 0.15),
+                            : const Color(0xFFE7E5E4),
                         fontFamily: 'monospace',
                         fontSize: 13,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
                       codeblockDecoration: BoxDecoration(
                         color: isUser
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : AppColors.textSecondary.withValues(alpha: 0.1),
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : const Color(0xFF292524),
                         borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
+                            BorderRadius.circular(AppSpacing.radiusMd),
                       ),
-                      listBullet: TextStyle(
-                        color: isUser ? Colors.white : AppColors.textPrimary,
+                      listBullet: AppTypography.body.copyWith(
+                        color: isUser ? Colors.white : AppColors.ink,
                       ),
-                      blockquote: TextStyle(
+                      blockquote: AppTypography.body.copyWith(
                         color: isUser
                             ? Colors.white.withValues(alpha: 0.9)
-                            : AppColors.textSecondary,
+                            : AppColors.inkLight,
                         fontStyle: FontStyle.italic,
                       ),
                       blockquoteDecoration: BoxDecoration(
                         color: isUser
                             ? Colors.white.withValues(alpha: 0.1)
-                            : AppColors.surfaceVariant,
+                            : AppColors.paperDark,
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusSm),
                         border: Border(
                           left: BorderSide(
                             color: isUser
-                                ? Colors.white.withValues(alpha: 0.3)
-                                : AppColors.primary.withValues(alpha: 0.5),
+                                ? Colors.white.withValues(alpha: 0.4)
+                                : AppColors.forest,
                             width: 3,
                           ),
                         ),
@@ -175,12 +167,11 @@ class ChatBubble extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     _formatTime(message.createdAt),
-                    style: TextStyle(
+                    style: AppTypography.bodySmall.copyWith(
                       fontSize: 10,
                       color: isUser
-                          ? Colors.white.withValues(alpha: 0.75)
-                          : AppColors.textHint,
-                      fontWeight: FontWeight.w500,
+                          ? Colors.white.withValues(alpha: 0.8)
+                          : AppColors.inkMuted,
                     ),
                   ),
                 ],
@@ -192,12 +183,21 @@ class ChatBubble extends StatelessWidget {
           if (isUser) ...[
             const SizedBox(width: AppSpacing.sm),
             if (showAvatar)
-              const _Avatar(
-                icon: Icons.person,
-                gradientColors: [AppColors.accentSky, Color(0xFF38BDF8)],
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.paperDark,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  size: 18,
+                  color: AppColors.ink,
+                ),
               )
             else
-              const SizedBox(width: 36),
+              const SizedBox(width: 32),
           ],
         ],
       ),
@@ -222,39 +222,5 @@ class ChatBubble extends StatelessWidget {
       return;
     }
     launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-}
-
-class _Avatar extends StatelessWidget {
-  final IconData icon;
-  final List<Color> gradientColors;
-
-  const _Avatar({
-    required this.icon,
-    required this.gradientColors,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: gradientColors[0].withValues(alpha: 0.25),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Icon(icon, size: 18, color: Colors.white),
-    );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hiking_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:hiking_assistant/features/auth/presentation/screens/login_screen.dart';
 import 'package:hiking_assistant/features/chat/presentation/screens/chat_screen.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
@@ -11,16 +12,53 @@ import 'package:hiking_assistant/features/hiking/presentation/screens/route_deta
 import 'package:hiking_assistant/features/profile/presentation/screens/achievements_screen.dart';
 import 'package:hiking_assistant/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:hiking_assistant/features/profile/presentation/screens/favorites_screen.dart';
+import 'package:hiking_assistant/features/profile/presentation/screens/help_screen.dart';
 import 'package:hiking_assistant/features/profile/presentation/screens/profile_screen.dart';
 import 'package:hiking_assistant/features/profile/presentation/screens/settings_screen.dart';
 import 'package:hiking_assistant/features/tracking/presentation/screens/track_detail_screen.dart';
 import 'package:hiking_assistant/features/tracking/presentation/screens/track_list_screen.dart';
+import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
+import 'package:hiking_assistant/features/weather/presentation/screens/weather_detail_screen.dart';
 import 'package:hiking_assistant/shared/widgets/app_shell.dart';
 
+/// Auth state change notifier for GoRouter refresh
+class AuthChangeNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  AuthChangeNotifier(this._ref) {
+    _ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
+  }
+}
+
+/// Auth change notifier provider
+final authChangeNotifierProvider = Provider<AuthChangeNotifier>((ref) {
+  return AuthChangeNotifier(ref);
+});
+
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authNotifier = ref.watch(authChangeNotifierProvider);
+
   return GoRouter(
     initialLocation: '/login',
     debugLogDiagnostics: kDebugMode,
+    refreshListenable: authNotifier,
+    redirect: (context, state) {
+      final authState = ref.read(authProvider);
+      final isAuthenticated = authState is AuthAuthenticated;
+      final isLoginPage = state.matchedLocation == '/login';
+
+      // Not authenticated and not on login page -> redirect to login
+      if (!isAuthenticated && !isLoginPage) {
+        return '/login';
+      }
+
+      // Authenticated and on login page -> redirect to home
+      if (isAuthenticated && isLoginPage) {
+        return '/home';
+      }
+
+      return null; // No redirect needed
+    },
     routes: [
       // 登录页
       GoRoute(
@@ -89,6 +127,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const AchievementsScreen(),
       ),
 
+      // 帮助与反馈页
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        builder: (context, state) => const HelpScreen(),
+      ),
+
+      // 天气详情页
+      GoRoute(
+        path: '/weather-detail',
+        name: 'weatherDetail',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          if (extra == null) {
+            return const Scaffold(
+              body: Center(child: Text('天气信息缺失')),
+            );
+          }
+          return WeatherDetailScreen(
+            weather: extra['weather'] as WeatherData,
+            locationName: extra['locationName'] as String? ?? '当前位置',
+          );
+        },
+      ),
+
       // 主应用 Shell
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
@@ -148,7 +211,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             Text(state.uri.toString()),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () => context.go('/chat'),
+              onPressed: () => context.go('/home'),
               child: const Text('返回首页'),
             ),
           ],

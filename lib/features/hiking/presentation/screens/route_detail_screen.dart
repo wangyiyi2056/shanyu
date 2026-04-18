@@ -14,9 +14,11 @@ import 'package:hiking_assistant/features/hiking/presentation/widgets/route_warn
 import 'package:hiking_assistant/features/hiking/presentation/widgets/route_waypoints_list.dart';
 import 'package:hiking_assistant/features/hiking/presentation/widgets/route_weather_card.dart';
 import 'package:hiking_assistant/features/hiking/presentation/widgets/star_rating_widget.dart';
+import 'package:hiking_assistant/features/profile/presentation/providers/favorite_routes_provider.dart';
 import 'package:hiking_assistant/features/weather/presentation/providers/weather_provider.dart';
 import 'package:hiking_assistant/shared/utils/color_utils.dart';
 import 'package:hiking_assistant/shared/utils/map_launcher.dart';
+import 'package:share_plus/share_plus.dart';
 
 class RouteDetailScreen extends ConsumerWidget {
   final HikingRoute route;
@@ -26,13 +28,14 @@ class RouteDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reviewsAsync = ref.watch(routeReviewsProvider(route.id));
-    final isFavoriteAsync = ref.watch(routeFavoriteProvider(route.id));
+    final favoriteIdsAsync = ref.watch(favoriteIdsProvider);
     final avgRatingAsync = ref.watch(routeAverageRatingProvider(route.id));
     final reviewCountAsync = ref.watch(routeReviewCountProvider(route.id));
-    final reviewActions = ref.read(reviewActionsProvider.notifier);
 
     final avgRating = avgRatingAsync.valueOrNull ?? route.rating;
     final reviewCount = reviewCountAsync.valueOrNull ?? route.reviewCount;
+
+    final isFavorite = favoriteIdsAsync.valueOrNull?.contains(route.id) ?? false;
 
     final weatherAsync = route.waypoints.isNotEmpty
         ? ref.watch(weatherProvider((
@@ -48,6 +51,12 @@ class RouteDetailScreen extends ConsumerWidget {
           SliverAppBar(
             expandedHeight: 240,
             pinned: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () => _shareRoute(context),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 route.name,
@@ -132,7 +141,10 @@ class RouteDetailScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.md),
 
                   // 天气预报卡片
-                  RouteWeatherCard(weatherAsync: weatherAsync),
+                  RouteWeatherCard(
+                    weatherAsync: weatherAsync,
+                    locationName: route.location,
+                  ),
 
                   const SizedBox(height: AppSpacing.md),
 
@@ -240,15 +252,16 @@ class RouteDetailScreen extends ConsumerWidget {
           child: Row(
             children: [
               Expanded(
-                child: isFavoriteAsync.when(
-                  data: (isFavorite) => OutlinedButton.icon(
+                child: favoriteIdsAsync.when(
+                  data: (_) => OutlinedButton.icon(
                     onPressed: () async {
-                      final result =
-                          await reviewActions.toggleFavorite(route.id);
+                      final result = await ref
+                          .read(toggleFavoriteProvider(route.id).future);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(result ? '已添加到收藏' : '已取消收藏'),
+                            content:
+                                Text(result ? '已添加到收藏' : '已取消收藏'),
                             duration: const Duration(seconds: 1),
                           ),
                         );
@@ -336,5 +349,20 @@ class RouteDetailScreen extends ConsumerWidget {
         );
       }
     }
+  }
+
+  void _shareRoute(BuildContext context) {
+    final buffer = StringBuffer()
+      ..writeln('推荐路线：${route.name}')
+      ..writeln('')
+      ..writeln('📍 位置：${route.location}')
+      ..writeln('📏 长度：${route.distance} km')
+      ..writeln('⏱️ 预计时长：${route.estimatedDuration} 分钟')
+      ..writeln('⛰️ 爬升：${route.elevationGain} m')
+      ..writeln('🎯 难度：${route.difficultyLabel}')
+      ..writeln('⭐ 评分：${route.rating}')
+      ..writeln('')
+      ..writeln(route.description);
+    Share.share(buffer.toString(), subject: '推荐路线: ${route.name}');
   }
 }

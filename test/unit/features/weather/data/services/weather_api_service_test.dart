@@ -1,9 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
 
 void main() {
   group('WeatherData', () {
-    test('iconEmoji returns correct emoji for sunny', () {
+    test('iconData returns correct icon for sunny', () {
       final weather = WeatherData(
         temperature: 25,
         windSpeed: 10,
@@ -11,10 +12,10 @@ void main() {
         description: '晴朗',
         updatedAt: DateTime.now(),
       );
-      expect(weather.iconEmoji, '☀️');
+      expect(weather.iconData, Icons.wb_sunny);
     });
 
-    test('iconEmoji returns correct emoji for rain', () {
+    test('iconData returns correct icon for rain', () {
       final weather = WeatherData(
         temperature: 20,
         windSpeed: 15,
@@ -22,10 +23,10 @@ void main() {
         description: '小雨',
         updatedAt: DateTime.now(),
       );
-      expect(weather.iconEmoji, '🌧️');
+      expect(weather.iconData, Icons.water_drop);
     });
 
-    test('iconEmoji returns correct emoji for thunderstorm', () {
+    test('iconData returns correct icon for thunderstorm', () {
       final weather = WeatherData(
         temperature: 18,
         windSpeed: 20,
@@ -33,7 +34,7 @@ void main() {
         description: '雷雨',
         updatedAt: DateTime.now(),
       );
-      expect(weather.iconEmoji, '⛈️');
+      expect(weather.iconData, Icons.bolt);
     });
 
     test('isGoodForHiking returns true for good weather', () {

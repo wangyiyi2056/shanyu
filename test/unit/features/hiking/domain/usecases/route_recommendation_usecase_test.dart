@@ -9,7 +9,10 @@ void main() {
 
   setUp(() {
     datasource = RouteLocalDatasource();
-    useCase = RouteRecommendationUseCase(datasource);
+    useCase = RouteRecommendationUseCase(
+      RouteLocalDatasourceAdapter(datasource),
+      datasource,
+    );
   });
 
   group('RouteRecommendationUseCase', () {

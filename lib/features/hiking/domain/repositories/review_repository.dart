@@ -1,65 +1,80 @@
 import 'package:hiking_assistant/features/hiking/data/datasources/review_local_datasource.dart';
+import 'package:hiking_assistant/features/hiking/data/datasources/route_api_datasource.dart' as api;
 import 'package:hiking_assistant/features/hiking/data/models/review_model.dart';
 
 /// 评价仓储接口
 abstract interface class ReviewRepository {
   Future<List<RouteReview>> getReviewsForRoute(String routeId);
-  Future<List<RouteReview>> getAllReviews();
-  Future<RouteReview> addReview(RouteReview review);
+  Future<void> addReview(String routeId, double rating, String comment, String authorName);
   Future<void> deleteReview(String reviewId);
   Future<double> getAverageRating(String routeId);
   Future<int> getReviewCount(String routeId);
-  Future<bool> isFavorite(String routeId);
-  Future<void> addFavorite(String routeId);
-  Future<void> removeFavorite(String routeId);
-  Future<bool> toggleFavorite(String routeId);
-  Future<List<RouteFavorite>> getAllFavorites();
 }
 
-/// 评价仓储实现
+/// 评价仓储实现 - 支持 API 和本地数据源
 class ReviewRepositoryImpl implements ReviewRepository {
-  final ReviewLocalDatasource _datasource;
+  final api.RouteApiDatasource _apiDatasource;
+  final ReviewLocalDatasource _localDatasource;
+  final bool _isAuthenticated;
 
-  ReviewRepositoryImpl(this._datasource);
-
-  @override
-  Future<List<RouteReview>> getReviewsForRoute(String routeId) =>
-      _datasource.getReviewsForRoute(routeId);
-
-  @override
-  Future<List<RouteReview>> getAllReviews() => _datasource.getAllReviews();
-
-  @override
-  Future<RouteReview> addReview(RouteReview review) =>
-      _datasource.addReview(review);
+  ReviewRepositoryImpl({
+    required api.RouteApiDatasource apiDatasource,
+    required ReviewLocalDatasource localDatasource,
+    required bool isAuthenticated,
+  })  : _apiDatasource = apiDatasource,
+        _localDatasource = localDatasource,
+        _isAuthenticated = isAuthenticated;
 
   @override
-  Future<void> deleteReview(String reviewId) =>
-      _datasource.deleteReview(reviewId);
+  Future<List<RouteReview>> getReviewsForRoute(String routeId) async {
+    if (_isAuthenticated) {
+      try {
+        final reviews = await _apiDatasource.getReviews(routeId);
+        if (reviews.isNotEmpty) return reviews;
+      } catch (e) {
+        // Fall back to local on API error
+      }
+    }
+    return _localDatasource.getReviewsForRoute(routeId);
+  }
 
   @override
-  Future<double> getAverageRating(String routeId) =>
-      _datasource.getAverageRating(routeId);
+  Future<void> addReview(String routeId, double rating, String comment, String authorName) async {
+    if (_isAuthenticated) {
+      try {
+        await _apiDatasource.createReview(routeId, rating.toInt(), comment);
+        return;
+      } catch (e) {
+        // Fall back to local on API error
+      }
+    }
+    final review = RouteReview(
+      id: '${DateTime.now().millisecondsSinceEpoch}',
+      routeId: routeId,
+      rating: rating,
+      comment: comment,
+      authorName: authorName,
+      createdAt: DateTime.now(),
+    );
+    await _localDatasource.addReview(review);
+  }
 
   @override
-  Future<int> getReviewCount(String routeId) =>
-      _datasource.getReviewCount(routeId);
+  Future<void> deleteReview(String reviewId) async {
+    // Local delete only (API delete requires ownership verification)
+    await _localDatasource.deleteReview(reviewId);
+  }
 
   @override
-  Future<bool> isFavorite(String routeId) => _datasource.isFavorite(routeId);
+  Future<double> getAverageRating(String routeId) async {
+    final reviews = await getReviewsForRoute(routeId);
+    if (reviews.isEmpty) return 0.0;
+    return reviews.map((r) => r.rating).reduce((a, b) => a + b) / reviews.length;
+  }
 
   @override
-  Future<void> addFavorite(String routeId) => _datasource.addFavorite(routeId);
-
-  @override
-  Future<void> removeFavorite(String routeId) =>
-      _datasource.removeFavorite(routeId);
-
-  @override
-  Future<bool> toggleFavorite(String routeId) =>
-      _datasource.toggleFavorite(routeId);
-
-  @override
-  Future<List<RouteFavorite>> getAllFavorites() =>
-      _datasource.getAllFavorites();
+  Future<int> getReviewCount(String routeId) async {
+    final reviews = await getReviewsForRoute(routeId);
+    return reviews.length;
+  }
 }

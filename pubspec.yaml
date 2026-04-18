@@ -36,6 +36,8 @@ dependencies:
   # 本地存储
   shared_preferences: ^2.2.2
   sqflite: ^2.3.2
+  sqflite_common_ffi_web: ^0.4.0+1
+  flutter_secure_storage: ^9.2.2
   path: ^1.9.0
 
   # URL 启动
@@ -44,9 +46,15 @@ dependencies:
   # 分享
   share_plus: ^10.0.0
 
+  # 文件路径
+  path_provider: ^2.1.1
+
   # 元数据注解
   meta: ^1.11.0
   flutter_markdown_plus: ^1.0.7
+
+  # Google Fonts
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

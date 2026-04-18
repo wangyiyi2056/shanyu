@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 
 class InputBar extends StatefulWidget {
   final Function(String) onSend;
@@ -51,8 +52,6 @@ class _InputBarState extends State<InputBar> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       padding: EdgeInsets.only(
         left: AppSpacing.md,
@@ -61,46 +60,46 @@ class _InputBarState extends State<InputBar> {
         bottom: AppSpacing.md + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusLg),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowMedium.withValues(alpha: 0.3),
-            blurRadius: 20,
+            color: AppColors.ink.withValues(alpha: 0.06),
+            blurRadius: 16,
             offset: const Offset(0, -4),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // 附件按钮
-          _AttachmentButton(onPressed: () => _showAttachmentMenu(context)),
+          // 功能按钮
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            child: InkWell(
+              onTap: () => _showAttachmentMenu(context),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                child: const Icon(
+                  Icons.add_circle_outline,
+                  color: AppColors.inkMuted,
+                  size: 26,
+                ),
+              ),
+            ),
+          ),
 
           const SizedBox(width: AppSpacing.sm),
 
-          // 输入框
+          // 文本输入框
           Expanded(
             child: Container(
               constraints: const BoxConstraints(
                 maxHeight: 120,
-                minHeight: AppSpacing.chatInputHeight,
-              ),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurfaceVariant : AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                border: Border.all(
-                  color: isDark
-                      ? AppColors.darkSurfaceElevated
-                      : AppColors.primaryLighter,
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.shadowLight.withValues(alpha: 0.5),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                minHeight: 48,
               ),
               child: TextField(
                 controller: _controller,
@@ -109,16 +108,17 @@ class _InputBarState extends State<InputBar> {
                 onSubmitted: (_) => _handleSend(),
                 decoration: InputDecoration(
                   hintText: '输入消息...',
-                  hintStyle: TextStyle(
-                    color: isDark ? AppColors.darkTextHint : AppColors.textHint,
-                    fontSize: 15,
+                  hintStyle: AppTypography.body.copyWith(
+                    color: AppColors.inkMuted,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                     borderSide: BorderSide.none,
                   ),
+                  filled: true,
+                  fillColor: AppColors.paperDark,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
+                    horizontal: AppSpacing.lg,
                     vertical: AppSpacing.sm,
                   ),
                 ),
@@ -129,9 +129,36 @@ class _InputBarState extends State<InputBar> {
           const SizedBox(width: AppSpacing.sm),
 
           // 发送按钮
-          _SendButton(
-            hasText: _hasText,
-            onPressed: _hasText ? _handleSend : null,
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            child: Material(
+              color: _hasText ? AppColors.forest : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              child: InkWell(
+                onTap: _hasText ? _handleSend : null,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: _hasText
+                      ? BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.forest, AppColors.forestLight],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusFull),
+                        )
+                      : null,
+                  child: Icon(
+                    Icons.send,
+                    color: _hasText ? Colors.white : AppColors.inkMuted,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -139,61 +166,43 @@ class _InputBarState extends State<InputBar> {
   }
 
   void _showAttachmentMenu(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => SafeArea(
-        child: Container(
-          margin: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowDark.withValues(alpha: 0.2),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: Container(
+            margin: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              boxShadow: AppColors.softShadow(blur: 20),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _AttachmentMenuItem(
+                _AttachmentTile(
                   icon: Icons.photo_camera,
-                  iconGradient: const [
-                    AppColors.accentRose,
-                    Color(0xFFFB923C),
-                  ],
-                  title: '拍照',
+                  label: '拍照',
                   subtitle: '识别植物或风景',
-                  onTap: () {
-                    Navigator.pop(context);
-                    widget.onCameraInput?.call();
-                  },
-                ),
-                _AttachmentMenuItem(
-                  icon: Icons.photo_library,
-                  iconGradient: const [
-                    AppColors.secondary,
-                    AppColors.secondaryLight,
-                  ],
-                  title: '相册',
-                  subtitle: '从照片中选择',
+                  color: AppColors.forest,
                   onTap: () => Navigator.pop(context),
                 ),
-                _AttachmentMenuItem(
+                const Divider(height: 1, indent: 68),
+                _AttachmentTile(
+                  icon: Icons.photo_library,
+                  label: '相册',
+                  subtitle: '从照片中选择',
+                  color: AppColors.orange,
+                  onTap: () => Navigator.pop(context),
+                ),
+                const Divider(height: 1, indent: 68),
+                _AttachmentTile(
                   icon: Icons.location_on,
-                  iconGradient: const [
-                    AppColors.info,
-                    Color(0xFF60A5FA),
-                  ],
-                  title: '发送位置',
+                  label: '发送位置',
                   subtitle: '分享当前位置',
+                  color: AppColors.lavender,
                   onTap: () => Navigator.pop(context),
                 ),
               ],
@@ -205,162 +214,60 @@ class _InputBarState extends State<InputBar> {
   }
 }
 
-class _AttachmentButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const _AttachmentButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        onTap: onPressed,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.darkSurfaceVariant
-                : AppColors.surfaceVariant,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          ),
-          child: Icon(
-            Icons.add,
-            color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-            size: 22,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SendButton extends StatelessWidget {
-  final bool hasText;
-  final VoidCallback? onPressed;
-
-  const _SendButton({required this.hasText, this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOutBack,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          onTap: onPressed,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutBack,
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: hasText ? AppColors.primaryGradient : null,
-              color: hasText
-                  ? null
-                  : Theme.of(context).brightness == Brightness.light
-                      ? AppColors.surfaceVariant
-                      : AppColors.darkSurfaceVariant,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              boxShadow: hasText
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              transitionBuilder: (child, animation) {
-                return ScaleTransition(scale: animation, child: child);
-              },
-              child: Icon(
-                key: ValueKey<bool>(hasText),
-                hasText ? Icons.arrow_upward : Icons.arrow_upward,
-                color: hasText
-                    ? Colors.white
-                    : Theme.of(context).brightness == Brightness.light
-                        ? AppColors.textHint
-                        : AppColors.darkTextHint,
-                size: 20,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AttachmentMenuItem extends StatelessWidget {
+class _AttachmentTile extends StatelessWidget {
   final IconData icon;
-  final List<Color> iconGradient;
-  final String title;
+  final String label;
   final String subtitle;
+  final Color color;
   final VoidCallback onTap;
 
-  const _AttachmentMenuItem({
+  const _AttachmentTile({
     required this.icon,
-    required this.iconGradient,
-    required this.title,
+    required this.label,
     required this.subtitle,
+    required this.color,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return ListTile(
-      leading: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: iconGradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          boxShadow: [
-            BoxShadow(
-              color: iconGradient[0].withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Icon(icon, color: color),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: AppTypography.body),
+                  Text(
+                    subtitle,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.inkMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        child: Icon(icon, color: Colors.white, size: 22),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-          color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: TextStyle(
-          fontSize: 13,
-          color:
-              isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
-        ),
-      ),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
     );
   }
 }

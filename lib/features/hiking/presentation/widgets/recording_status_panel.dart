@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
 
 class RecordingStatusPanel extends StatelessWidget {
@@ -18,19 +20,24 @@ class RecordingStatusPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPaused = state.status == RecordingStatus.paused;
     final track = state.currentTrack;
+    final statusColor = isPaused ? AppColors.sun : AppColors.forest;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isPaused
-            ? Colors.orange.withValues(alpha: 0.9)
-            : Colors.red.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        gradient: LinearGradient(
+          colors: isPaused
+              ? [AppColors.sun, const Color(0xFFD97706)]
+              : [AppColors.forest, AppColors.forestLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: statusColor.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -39,58 +46,76 @@ class RecordingStatusPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: isPaused ? Colors.orange.shade200 : Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
+              _PulsingDot(isPaused: isPaused),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 isPaused ? '记录已暂停' : '正在记录轨迹',
-                style: const TextStyle(
+                style: AppTypography.label.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const Spacer(),
-              if (isPaused)
-                TextButton.icon(
-                  onPressed: onResume,
-                  icon: const Icon(Icons.play_arrow,
-                      color: Colors.white, size: 18),
-                  label:
-                      const Text('恢复', style: TextStyle(color: Colors.white)),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                )
-              else
-                TextButton.icon(
-                  onPressed: onPause,
-                  icon: const Icon(Icons.pause, color: Colors.white, size: 18),
-                  label:
-                      const Text('暂停', style: TextStyle(color: Colors.white)),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              Material(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                child: InkWell(
+                  onTap: isPaused ? onResume : onPause,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPaused ? Icons.play_arrow : Icons.pause,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          isPaused ? '恢复' : '暂停',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStat('时长', _formatDuration(state.elapsed)),
-              _buildStat('距离', track?.distanceText ?? '0 m'),
-              _buildStat('点数', '${state.points.length}'),
-            ],
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStat('时长', _formatDuration(state.elapsed)),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
+                _buildStat('距离', track?.distanceText ?? '0 m'),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
+                _buildStat('点数', '${state.points.length}'),
+              ],
+            ),
           ),
         ],
       ),
@@ -102,16 +127,16 @@ class RecordingStatusPanel extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: AppTypography.data.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 16,
           ),
         ),
+        const SizedBox(height: 2),
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: Colors.white.withValues(alpha: 0.9),
             fontSize: 12,
           ),
         ),
@@ -127,5 +152,73 @@ class RecordingStatusPanel extends StatelessWidget {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+class _PulsingDot extends StatefulWidget {
+  final bool isPaused;
+
+  const _PulsingDot({required this.isPaused});
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+    _animation = Tween<double>(begin: 1.0, end: 1.6).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isPaused) {
+      return Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.7),
+          shape: BoxShape.circle,
+        ),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.5),
+                blurRadius: 8 * _animation.value,
+                spreadRadius: 2 * (_animation.value - 1.0),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
+import 'dart:io';
 
 class TrackDetailScreen extends ConsumerWidget {
   final String trackId;
@@ -24,11 +26,17 @@ class TrackDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('轨迹详情'),
         actions: [
-          if (trackData != null)
+          if (trackData != null) ...[
+            IconButton(
+              icon: const Icon(Icons.download_outlined),
+              tooltip: '导出 GPX',
+              onPressed: () => _exportGpx(context, trackData.$1, trackData.$2),
+            ),
             IconButton(
               icon: const Icon(Icons.share_outlined),
               onPressed: () => _shareTrack(context, trackData.$1),
             ),
+          ],
         ],
       ),
       body: trackDetailAsync.when(
@@ -61,6 +69,98 @@ class TrackDetailScreen extends ConsumerWidget {
       ..writeln('爬升：${track.elevationGain.toStringAsFixed(0)} m')
       ..writeln('日期：${_formatDate(track.startTime)}');
     Share.share(buffer.toString());
+  }
+
+  Future<void> _exportGpx(
+    BuildContext context,
+    HikingTrack track,
+    List<TrackPoint> points,
+  ) async {
+    if (points.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('没有轨迹点数据，无法导出')),
+      );
+      return;
+    }
+
+    try {
+      // Generate GPX content
+      final gpxContent = _generateGpx(track, points);
+
+      // Write to temporary file
+      final directory = await getTemporaryDirectory();
+      final fileName = '${track.name.replaceAll(RegExp(r'[^\w\s-]'), '_')}.gpx';
+      final file = File('${directory.path}/$fileName');
+      await file.writeAsString(gpxContent);
+
+      // Share the file
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: '轨迹导出: ${track.name}',
+        text: '这是从爬山助手导出的轨迹文件',
+      );
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('GPX 文件已生成')),
+        );
+      }
+    } on Exception catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('导出失败: $e')),
+        );
+      }
+    }
+  }
+
+  String _generateGpx(HikingTrack track, List<TrackPoint> points) {
+    final buffer = StringBuffer()
+      ..writeln('<?xml version="1.0" encoding="UTF-8"?>')
+      ..writeln('<gpx version="1.1" creator="Hiking Assistant" ')
+      ..writeln('xmlns="http://www.topografix.com/GPX/1/1" ')
+      ..writeln('xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ')
+      ..writeln(
+          'xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">')
+      ..writeln('  <metadata>')
+      ..writeln('    <name>${_escapeXml(track.name)}</name>')
+      ..writeln('    <desc>${track.distanceText}, ${track.durationText}</desc>')
+      ..writeln(
+          '    <time>${track.startTime.toUtc().toIso8601String()}</time>')
+      ..writeln('  </metadata>')
+      ..writeln('  <trk>')
+      ..writeln('    <name>${_escapeXml(track.name)}</name>')
+      ..writeln('    <trkseg>');
+
+    for (final point in points) {
+      buffer.writeln('      <trkpt lat="${point.latitude}" lon="${point.longitude}">');
+      if (point.elevation != null) {
+        buffer.writeln('        <ele>${point.elevation!.toStringAsFixed(1)}</ele>');
+      }
+      buffer.writeln('        <time>${point.timestamp.toUtc().toIso8601String()}</time>');
+      if (point.speed != null && point.speed! > 0) {
+        buffer.writeln('        <extensions>');
+        buffer.writeln('          <speed>${point.speed!.toStringAsFixed(2)}</speed>');
+        buffer.writeln('        </extensions>');
+      }
+      buffer.writeln('      </trkpt>');
+    }
+
+    buffer
+      ..writeln('    </trkseg>')
+      ..writeln('  </trk>')
+      ..writeln('</gpx>');
+
+    return buffer.toString();
+  }
+
+  String _escapeXml(String input) {
+    return input
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&apos;');
   }
 }
 

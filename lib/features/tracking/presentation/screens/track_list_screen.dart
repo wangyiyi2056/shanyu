@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
 
@@ -14,19 +15,25 @@ class TrackListScreen extends ConsumerWidget {
     final tracksAsync = ref.watch(tracksProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: const Text('历史记录'),
+        backgroundColor: AppColors.paper,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+        title: Text('历史记录', style: AppTypography.title),
       ),
       body: tracksAsync.when(
         data: (tracks) => _TrackListView(tracks: tracks),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.forest),
+        ),
         error: (error, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.md),
-              Text('加载失败: $error'),
+              Text('加载失败: $error', style: AppTypography.body),
             ],
           ),
         ),
@@ -47,6 +54,7 @@ class _TrackListView extends ConsumerWidget {
     }
 
     return RefreshIndicator(
+      color: AppColors.forest,
       onRefresh: () async {
         ref.invalidate(tracksProvider);
         await ref.read(tracksProvider.future);
@@ -57,14 +65,17 @@ class _TrackListView extends ConsumerWidget {
         itemCount: tracks.length,
         itemBuilder: (context, index) {
           final track = tracks[index];
-          return _DismissibleTrackItem(
-            key: ValueKey(track.id),
-            track: track,
-            onTap: () => context.push('/track/${track.id}'),
-            onDelete: () async {
-              await ref.read(trackRepositoryProvider).deleteTrack(track.id);
-              ref.invalidate(tracksProvider);
-            },
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: _DismissibleTrackItem(
+              key: ValueKey(track.id),
+              track: track,
+              onTap: () => context.push('/track/${track.id}'),
+              onDelete: () async {
+                await ref.read(trackRepositoryProvider).deleteTrack(track.id);
+                ref.invalidate(tracksProvider);
+              },
+            ),
           );
         },
       ),
@@ -93,8 +104,15 @@ class _DismissibleTrackItem extends StatelessWidget {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('删除轨迹'),
-            content: Text('确定要删除 "${track.name}" 吗？此操作不可恢复。'),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
+            title: Text('删除轨迹', style: AppTypography.title),
+            content: Text(
+              '确定要删除 "${track.name}" 吗？此操作不可恢复。',
+              style: AppTypography.body,
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
@@ -102,6 +120,9 @@ class _DismissibleTrackItem extends StatelessWidget {
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                ),
                 child: const Text('删除'),
               ),
             ],
@@ -118,10 +139,9 @@ class _DismissibleTrackItem extends StatelessWidget {
         }
       },
       background: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.error,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: AppSpacing.md),
@@ -166,21 +186,21 @@ class _EmptyState extends StatelessWidget {
                   Icon(
                     Icons.route,
                     size: 64,
-                    color: AppColors.textHint.withValues(alpha: 0.5),
+                    color: AppColors.inkMuted.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     '还没有记录任何轨迹',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                    style: AppTypography.title.copyWith(
+                      color: AppColors.inkLight,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     '去地图页面开始你的第一次记录吧',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textHint,
-                        ),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.inkMuted,
+                    ),
                   ),
                 ],
               ),
@@ -206,54 +226,64 @@ class _TrackListItem extends StatelessWidget {
     final dateStr =
         '${track.startTime.year}-${track.startTime.month.toString().padLeft(2, '0')}-${track.startTime.day.toString().padLeft(2, '0')}';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      track.name,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Text(
-                    dateStr,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: AppColors.softShadow(blur: 12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        track.name,
+                        style: AppTypography.title.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  _StatChip(
-                    icon: Icons.straighten,
-                    value: track.distanceText,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _StatChip(
-                    icon: Icons.timer,
-                    value: track.durationText,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _StatChip(
-                    icon: Icons.terrain,
-                    value: '${track.elevationGain.toStringAsFixed(0)} m',
-                  ),
-                ],
-              ),
-            ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      dateStr,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    _StatChip(
+                      icon: Icons.straighten,
+                      value: track.distanceText,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    _StatChip(
+                      icon: Icons.timer,
+                      value: track.durationText,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    _StatChip(
+                      icon: Icons.terrain,
+                      value: '${track.elevationGain.toStringAsFixed(0)} m',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -278,20 +308,19 @@ class _StatChip extends StatelessWidget {
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: AppColors.forest.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.primary),
+          Icon(icon, size: 14, color: AppColors.forest),
           const SizedBox(width: 4),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.primary,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.dataSmall.copyWith(
+              color: AppColors.forest,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

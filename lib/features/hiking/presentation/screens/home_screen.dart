@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/chat/presentation/providers/chat_provider.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
@@ -12,7 +13,6 @@ import 'package:hiking_assistant/features/tracking/presentation/providers/tracki
 import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
 import 'package:hiking_assistant/shared/utils/color_utils.dart';
 
-/// 首页天气 Provider
 final homeWeatherProvider = FutureProvider<WeatherData>((ref) async {
   final location = ref.watch(chatNotifierProvider).currentLocation;
   final weatherService = ref.watch(weatherApiServiceProvider);
@@ -22,552 +22,193 @@ final homeWeatherProvider = FutureProvider<WeatherData>((ref) async {
   );
 });
 
-/// 首页推荐路线 Provider
 final homeRoutesProvider =
     FutureProvider<List<RouteRecommendation>>((ref) async {
   final useCase = ref.watch(routeRecommendationUseCaseProvider);
   final location = ref.watch(chatNotifierProvider).currentLocation;
-  return useCase.getRecommendationsSync(
+  return await useCase.getRecommendations(
     preferences: RoutePreferences(
       userLatitude: location?.latitude,
       userLongitude: location?.longitude,
     ),
-    limit: 2,
+    limit: 4,
   );
 });
 
-/// 最近轨迹 Provider（限制 2 条）
 final recentTracksProvider = FutureProvider<List<HikingTrack>>((ref) async {
   final tracks = await ref.watch(tracksProvider.future);
   return tracks.take(2).toList();
 });
 
-class HomeScreen extends ConsumerWidget {
+/// 搜索筛选状态
+final searchQueryProvider = StateProvider<String>((ref) => '');
+final difficultyFilterProvider = StateProvider<Set<String>>((ref) => {});
+
+/// 搜索后的路线列表
+final filteredRoutesProvider = FutureProvider<List<RouteRecommendation>>((ref) async {
+  final useCase = ref.watch(routeRecommendationUseCaseProvider);
+  final location = ref.watch(chatNotifierProvider).currentLocation;
+  final searchQuery = ref.watch(searchQueryProvider);
+  final difficultyFilter = ref.watch(difficultyFilterProvider);
+
+  // 搜索逻辑
+  if (searchQuery.isNotEmpty) {
+    final searchResults = await useCase.searchByLocation(searchQuery);
+    // 应用难度筛选
+    if (difficultyFilter.isEmpty) {
+      return searchResults;
+    }
+    return searchResults.where((rec) =>
+        difficultyFilter.contains(rec.route.difficultyLabel)).toList();
+  }
+
+  // 筛选逻辑
+  final recommendations = await useCase.getRecommendations(
+    preferences: RoutePreferences(
+      userLatitude: location?.latitude,
+      userLongitude: location?.longitude,
+      preferredDifficulty: difficultyFilter.isNotEmpty
+          ? difficultyFilter.first
+          : null,
+    ),
+    limit: 20,
+  );
+
+  if (difficultyFilter.isEmpty) {
+    return recommendations.take(4).toList();
+  }
+  return recommendations.where((rec) =>
+      difficultyFilter.contains(rec.route.difficultyLabel)).take(4).toList();
+});
+
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // App Bar
-          SliverAppBar(
-            expandedHeight: 220,
-            floating: false,
-            pinned: true,
-            stretch: true,
-            backgroundColor: AppColors.primaryDark,
-            flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                '爬山助手',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-              ),
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppColors.heroGradient,
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: -40,
-                      top: -20,
-                      child: Icon(
-                        Icons.terrain,
-                        size: 280,
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
-                    ),
-                    Positioned(
-                      left: -30,
-                      bottom: 40,
-                      child: Icon(
-                        Icons.forest,
-                        size: 160,
-                        color: Colors.white.withValues(alpha: 0.06),
-                      ),
-                    ),
-                    Positioned(
-                      right: 40,
-                      bottom: 60,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.2),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 80,
-                      top: 100,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.15),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              stretchModes: const [
-                StretchMode.zoomBackground,
-                StretchMode.fadeTitle,
-              ],
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                color: Colors.white,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('暂无新通知')),
-                  );
-                },
-              ),
-            ],
-          ),
-
-          // Content
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // 天气卡片
-                const _WeatherCard(),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // 快捷入口
-                _SectionHeader(title: '快捷功能', onSeeAll: () {}),
-                const SizedBox(height: AppSpacing.sm),
-                const _QuickActionsGrid(),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // 推荐路线
-                _SectionHeader(
-                  title: '推荐路线',
-                  onSeeAll: () => context.go('/map'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                const _RecommendedRoutesList(),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // 最近活动
-                _SectionHeader(
-                  title: '最近活动',
-                  onSeeAll: () => context.push('/tracks'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                const _RecentActivitiesList(),
-
-                const SizedBox(height: AppSpacing.xl),
-              ]),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final VoidCallback onSeeAll;
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _searchController = TextEditingController();
+  bool _showFilters = false;
 
-  const _SectionHeader({
-    required this.title,
-    required this.onSeeAll,
-  });
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        TextButton(
-          onPressed: onSeeAll,
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('查看全部'),
-              SizedBox(width: 2),
-              Icon(Icons.chevron_right, size: 16),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WeatherCard extends ConsumerWidget {
-  const _WeatherCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final weatherAsync = ref.watch(homeWeatherProvider);
-
-    return weatherAsync.when(
-      data: (weather) => _buildWeatherContent(context, weather),
-      loading: () => _buildLoadingCard(),
-      error: (_, __) => _buildErrorCard(context),
-    );
-  }
-
-  Widget _buildWeatherContent(BuildContext context, WeatherData weather) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.surface, AppColors.surfaceVariant],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: AppColors.primaryLighter.withValues(alpha: 0.5),
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primaryLighter, AppColors.surface],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  ),
-                  child: Center(
-                    child: Text(
-                      weather.iconEmoji,
-                      style: const TextStyle(fontSize: 36),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        weather.description,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${weather.temperature.toStringAsFixed(0)}°C',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primaryDark,
-                                ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: weather.isGoodForHiking
-                        ? AppColors.primaryLighter
-                        : const Color(0xFFFEF3C7),
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(
-                    weather.hikingAdvice,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: weather.isGoodForHiking
-                              ? AppColors.primaryDarker
-                              : const Color(0xFF92400E),
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const Divider(height: 1),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _WeatherStatItem(
-                  icon: Icons.air,
-                  label: '风速',
-                  value: '${weather.windSpeed.toStringAsFixed(0)} km/h',
-                  iconColor: AppColors.accentSky,
-                ),
-                _WeatherStatItem(
-                  icon: Icons.thermostat,
-                  label: '最高温',
-                  value: weather.maxTemp != null
-                      ? '${weather.maxTemp!.toStringAsFixed(0)}°C'
-                      : '--',
-                  iconColor: AppColors.secondary,
-                ),
-                _WeatherStatItem(
-                  icon: Icons.ac_unit,
-                  label: '最低温',
-                  value: weather.minTemp != null
-                      ? '${weather.minTemp!.toStringAsFixed(0)}°C'
-                      : '--',
-                  iconColor: AppColors.accentViolet,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingCard() {
-    return Container(
-      height: 160,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Center(child: CircularProgressIndicator()),
-    );
-  }
-
-  Widget _buildErrorCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              ),
-              child: const Icon(
-                Icons.wb_sunny,
-                size: 32,
-                color: Color(0xFFF59E0B),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
+    return Scaffold(
+      backgroundColor: AppColors.paper,
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '天气加载失败',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  const _WeatherHero(),
+                  const SizedBox(height: AppSpacing.lg),
+                  // 搜索栏
+                  _SearchBar(
+                    controller: _searchController,
+                    onSearch: (query) {
+                      ref.read(searchQueryProvider.notifier).state = query;
+                    },
+                    onToggleFilters: () {
+                      setState(() => _showFilters = !_showFilters);
+                    },
+                    showFilters: _showFilters,
                   ),
-                  Text(
-                    '请检查网络连接',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                  // 筛选标签
+                  if (_showFilters)
+                    _FilterChips(
+                      selectedDifficulties: ref.watch(difficultyFilterProvider),
+                      onSelectionChanged: (difficulties) {
+                        ref.read(difficultyFilterProvider.notifier).state = difficulties;
+                      },
+                    ),
+                  const SizedBox(height: AppSpacing.lg),
+                  const _QuickActionsPills(),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '推荐路线',
+                        style: AppTypography.title.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
                         ),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.go('/map'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.paperDark,
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                          child: Text(
+                            '全部',
+                            style: AppTypography.label.copyWith(
+                              color: AppColors.forest,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const _FilteredRoutesList(),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '最近活动',
+                        style: AppTypography.title.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.push('/tracks'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.paperDark,
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                          child: Text(
+                            '全部',
+                            style: AppTypography.label.copyWith(
+                              color: AppColors.forest,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  const _RecentActivitiesList(),
+                  const SizedBox(height: AppSpacing.xl),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _WeatherStatItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color iconColor;
-
-  const _WeatherStatItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: iconColor),
-        const SizedBox(width: 4),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.textHint,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickActionsGrid extends StatelessWidget {
-  const _QuickActionsGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 4,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppSpacing.md,
-      crossAxisSpacing: AppSpacing.md,
-      childAspectRatio: 0.85,
-      children: [
-        _QuickActionItem(
-          icon: Icons.route,
-          label: '找路线',
-          gradientColors: const [AppColors.primary, AppColors.primaryLight],
-          onTap: () => context.go('/chat'),
-        ),
-        _QuickActionItem(
-          icon: Icons.navigation,
-          label: '导航',
-          gradientColors: const [AppColors.accentSky, Color(0xFF38BDF8)],
-          onTap: () => context.go('/map'),
-        ),
-        _QuickActionItem(
-          icon: Icons.play_circle_outline,
-          label: '记录',
-          gradientColors: const [AppColors.secondary, AppColors.secondaryLight],
-          onTap: () => context.go('/map'),
-        ),
-        _QuickActionItem(
-          icon: Icons.photo_camera,
-          label: '识植物',
-          gradientColors: const [AppColors.accentRose, Color(0xFFFB923C)],
-          onTap: () => context.go(
-            '/chat?message=我在爬山时看到一种不认识的植物，请帮我描述一下常见野外植物的识别方法和注意事项',
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickActionItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final List<Color> gradientColors;
-  final VoidCallback onTap;
-
-  const _QuickActionItem({
-    required this.icon,
-    required this.label,
-    required this.gradientColors,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              boxShadow: [
-                BoxShadow(
-                  color: gradientColors[0].withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
           ),
         ],
       ),
@@ -575,17 +216,132 @@ class _QuickActionItem extends StatelessWidget {
   }
 }
 
-class _RecommendedRoutesList extends ConsumerWidget {
-  const _RecommendedRoutesList();
+class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onSearch;
+  final VoidCallback onToggleFilters;
+  final bool showFilters;
+
+  const _SearchBar({
+    required this.controller,
+    required this.onSearch,
+    required this.onToggleFilters,
+    required this.showFilters,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: controller,
+            onChanged: onSearch,
+            decoration: InputDecoration(
+              hintText: '搜索路线名称或地点...',
+              hintStyle: AppTypography.body.copyWith(
+                color: AppColors.inkMuted,
+              ),
+              prefixIcon: const Icon(Icons.search, color: AppColors.inkMuted),
+              suffixIcon: controller.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, color: AppColors.inkMuted),
+                      onPressed: () {
+                        controller.clear();
+                        onSearch('');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: showFilters ? AppColors.forest : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+          child: IconButton(
+            icon: Icon(
+              Icons.tune,
+              color: showFilters ? Colors.white : AppColors.inkMuted,
+            ),
+            onPressed: onToggleFilters,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterChips extends StatelessWidget {
+  final Set<String> selectedDifficulties;
+  final ValueChanged<Set<String>> onSelectionChanged;
+
+  const _FilterChips({
+    required this.selectedDifficulties,
+    required this.onSelectionChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final difficulties = ['新手', '中等', '困难', '专家'];
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: difficulties.map((diff) {
+          final isSelected = selectedDifficulties.contains(diff);
+          return FilterChip(
+            label: Text(diff),
+            selected: isSelected,
+            onSelected: (selected) {
+              final newSet = Set<String>.from(selectedDifficulties);
+              if (selected) {
+                newSet.add(diff);
+              } else {
+                newSet.remove(diff);
+              }
+              onSelectionChanged(newSet);
+            },
+            selectedColor: AppColors.forest.withValues(alpha: 0.2),
+            checkmarkColor: AppColors.forest,
+            backgroundColor: Colors.white,
+            labelStyle: AppTypography.label.copyWith(
+              color: isSelected ? AppColors.forest : AppColors.inkLight,
+            ),
+            side: BorderSide(
+              color: isSelected ? AppColors.forest : AppColors.inkMuted.withValues(alpha: 0.3),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _FilteredRoutesList extends ConsumerWidget {
+  const _FilteredRoutesList();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routesAsync = ref.watch(homeRoutesProvider);
+    final routesAsync = ref.watch(filteredRoutesProvider);
 
     return routesAsync.when(
       data: (recommendations) {
         if (recommendations.isEmpty) {
-          return const _EmptyState(message: '暂无推荐路线');
+          return const _EmptyCard(message: '没有找到匹配的路线');
         }
         return Column(
           children: recommendations.map((rec) {
@@ -601,10 +357,192 @@ class _RecommendedRoutesList extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox(
-        height: 180,
+        height: 160,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const _EmptyState(message: '推荐路线加载失败'),
+      error: (_, __) => const _EmptyCard(message: '推荐路线加载失败'),
+    );
+  }
+}
+
+class _WeatherHero extends ConsumerWidget {
+  const _WeatherHero();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weatherAsync = ref.watch(homeWeatherProvider);
+
+    return Container(
+      height: 160,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1B4D3E), Color(0xFF2E7D62)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: AppColors.softShadow(blur: 16, dy: 6),
+      ),
+      child: weatherAsync.when(
+        data: (weather) => Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      weather.description,
+                      style: AppTypography.body.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${weather.temperature.toStringAsFixed(0)}°C',
+                      style: AppTypography.display.copyWith(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        height: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: Text(
+                        weather.hikingAdvice,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Icon(
+                    weather.iconData,
+                    color: Colors.white.withValues(alpha: 0.9),
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.air,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${weather.windSpeed.toStringAsFixed(0)} km/h',
+                          style: AppTypography.dataSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+        error: (_, __) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.wb_sunny, size: 40, color: Colors.white70),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '天气加载失败',
+                style: AppTypography.title.copyWith(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickActionsPills extends StatelessWidget {
+  const _QuickActionsPills();
+
+  @override
+  Widget build(BuildContext context) {
+    final actions = [
+      ('找路线', Icons.route, () => context.go('/chat')),
+      ('导航', Icons.navigation, () => context.go('/map')),
+      ('记录', Icons.play_circle_outline, () => context.go('/map')),
+      ('识植物', Icons.photo_camera, () => context.go(
+            '/chat?message=我在爬山时看到一种不认识的植物，请帮我描述一下常见野外植物的识别方法和注意事项',
+          )),
+    ];
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: actions.map((a) {
+        final (label, icon, onTap) = a;
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.paperDark,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: AppColors.inkLight),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: AppTypography.label.copyWith(
+                    color: AppColors.inkLight,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -618,162 +556,173 @@ class _RouteCard extends StatelessWidget {
     required this.onTap,
   });
 
-  Widget _fallbackRouteImage() {
-    return Container(
-      color: AppColors.primaryLighter,
-      child: const Icon(
-        Icons.terrain,
-        size: 40,
-        color: AppColors.primary,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              // 封面图
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                child: SizedBox(
-                  width: 88,
-                  height: 88,
-                  child: route.imageUrl.isNotEmpty
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          boxShadow: AppColors.softShadow(blur: 12, dy: 4),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Large top image
+            SizedBox(
+              height: 140,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  route.imageUrl.isNotEmpty
                       ? Image.network(
                           route.imageUrl,
                           fit: BoxFit.cover,
-                          cacheWidth: 240,
-                          cacheHeight: 240,
+                          colorBlendMode: BlendMode.multiply,
+                          color: Colors.black.withValues(alpha: 0.05),
                           loadingBuilder: (context, child, progress) {
                             if (progress == null) return child;
                             return Container(
-                              color: AppColors.primaryLighter,
+                              color: AppColors.paperDark,
                               child: const Center(
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               ),
                             );
                           },
-                          errorBuilder: (_, __, ___) => _fallbackRouteImage(),
+                          errorBuilder: (_, __, ___) => Container(
+                            color: AppColors.paperDark,
+                            child: const Icon(
+                              Icons.terrain,
+                              size: 48,
+                              color: AppColors.inkMuted,
+                            ),
+                          ),
                         )
-                      : _fallbackRouteImage(),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              // 信息
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+                      : Container(
+                          color: AppColors.paperDark,
+                          child: const Icon(
+                            Icons.terrain,
+                            size: 48,
+                            color: AppColors.inkMuted,
+                          ),
+                        ),
+                  // Bottom gradient for text readability
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.5),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Difficulty tag on image
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: Text(
+                        route.difficultyLabel,
+                        style: AppTypography.dataSmall.copyWith(
+                          color: hexToColor(route.difficultyColor),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Title on image bottom
+                  Positioned(
+                    bottom: 10,
+                    left: 12,
+                    right: 12,
+                    child: Text(
                       route.name,
-                      style: Theme.of(context).textTheme.titleMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: AppTypography.title.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: hexToColor(route.difficultyColor)
-                                .withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            route.difficultyLabel,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                                  color: hexToColor(route.difficultyColor),
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.star, size: 14, color: AppColors.warning),
-                        const SizedBox(width: 2),
-                        Text(
-                          route.rating.toString(),
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _RouteMetaItem(
-                          icon: Icons.straighten,
-                          value: '${route.distance} km',
-                        ),
-                        const SizedBox(width: 12),
-                        _RouteMetaItem(
-                          icon: Icons.schedule,
-                          value: '${route.estimatedDuration} 分钟',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const Icon(Icons.chevron_right,
-                  color: AppColors.textHint, size: 20),
-            ],
-          ),
+            ),
+            // Info row below image
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.straighten,
+                    size: 16,
+                    color: AppColors.inkMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${route.distance} km',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.inkLight,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Icon(
+                    Icons.schedule,
+                    size: 16,
+                    color: AppColors.inkMuted,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${route.estimatedDuration} 分钟',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.inkLight,
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.star,
+                        size: 14,
+                        color: Color(0xFFF59E0B),
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        route.rating.toString(),
+                        style: AppTypography.label.copyWith(
+                          color: AppColors.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _RouteMetaItem extends StatelessWidget {
-  final IconData icon;
-  final String value;
-
-  const _RouteMetaItem({
-    required this.icon,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: AppColors.textHint),
-        const SizedBox(width: 2),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-              ),
-        ),
-      ],
     );
   }
 }
@@ -788,7 +737,7 @@ class _RecentActivitiesList extends ConsumerWidget {
     return tracksAsync.when(
       data: (tracks) {
         if (tracks.isEmpty) {
-          return const _EmptyState(
+          return const _EmptyCard(
             message: '暂无活动记录，开始你的第一次爬山之旅吧！',
           );
         }
@@ -796,83 +745,66 @@ class _RecentActivitiesList extends ConsumerWidget {
           children: tracks.map((track) {
             return Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.shadowLight,
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: InkWell(
-                  onTap: () => context.push('/track/${track.id}'),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.secondary,
-                                AppColors.secondaryLight
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusLg),
-                          ),
-                          child: const Icon(
-                            Icons.timeline,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+              child: GestureDetector(
+                onTap: () => context.push('/track/${track.id}'),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    boxShadow: AppColors.softShadow(blur: 12, dy: 4),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        margin: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.forest.withValues(alpha: 0.08),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
+                        child: const Icon(
+                          Icons.timeline,
+                          color: AppColors.forest,
+                          size: 28,
+                        ),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.md,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 track.name,
-                                style: Theme.of(context).textTheme.titleSmall,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.title.copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '${track.distanceText} · ${track.durationText}',
-                                style:
-                                    Theme.of(context).textTheme.bodySmall,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.inkMuted,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceVariant,
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusFull),
-                          ),
-                          child: Text(
-                            track.formattedDate,
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(right: 12),
+                        child: Icon(
+                          Icons.chevron_right,
+                          color: AppColors.inkMuted,
+                          size: 24,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -882,51 +814,42 @@ class _RecentActivitiesList extends ConsumerWidget {
       },
       loading: () => const SizedBox(
         height: 100,
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        child: Center(child: CircularProgressIndicator()),
       ),
-      error: (_, __) => const _EmptyState(message: '活动记录加载失败'),
+      error: (_, __) => const _EmptyCard(message: '活动记录加载失败'),
     );
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyCard extends StatelessWidget {
   final String message;
 
-  const _EmptyState({required this.message});
+  const _EmptyCard({required this.message});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.info_outline,
+            size: 40,
+            color: AppColors.inkMuted,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTypography.body.copyWith(
+              color: AppColors.inkMuted,
+            ),
           ),
         ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          children: [
-            Icon(
-              Icons.terrain_outlined,
-              size: 48,
-              color: AppColors.textHint.withValues(alpha: 0.6),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
-        ),
       ),
     );
   }

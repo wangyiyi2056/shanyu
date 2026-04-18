@@ -48,6 +48,26 @@ class WeatherApiService {
 
     final weatherCode = current['weathercode'] as int;
 
+    // Parse daily forecast
+    List<DailyForecast>? forecast;
+    if (daily != null) {
+      final dates = (daily['time'] as List<dynamic>?)?.cast<String>() ?? [];
+      final maxTemps = (daily['temperature_2m_max'] as List<dynamic>?)?.cast<num>() ?? [];
+      final minTemps = (daily['temperature_2m_min'] as List<dynamic>?)?.cast<num>() ?? [];
+      final codes = (daily['weathercode'] as List<dynamic>?)?.cast<int>() ?? [];
+
+      forecast = [];
+      for (var i = 0; i < dates.length && i < maxTemps.length && i < minTemps.length && i < codes.length; i++) {
+        forecast.add(DailyForecast(
+          date: DateTime.parse(dates[i]),
+          maxTemp: maxTemps[i].toDouble(),
+          minTemp: minTemps[i].toDouble(),
+          weatherCode: codes[i],
+          description: weatherCodeToDescription(codes[i]),
+        ));
+      }
+    }
+
     return WeatherData(
       temperature: (current['temperature'] as num).toDouble(),
       windSpeed: (current['windspeed'] as num).toDouble(),
@@ -64,6 +84,7 @@ class WeatherApiService {
               : null
           : null,
       updatedAt: DateTime.now(),
+      forecast: forecast,
     );
   }
 

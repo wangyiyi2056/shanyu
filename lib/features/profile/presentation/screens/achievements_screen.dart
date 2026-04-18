@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
+import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/profile/data/models/achievement_model.dart';
 import 'package:hiking_assistant/features/profile/presentation/providers/achievements_provider.dart';
 
@@ -13,8 +14,12 @@ class AchievementsScreen extends ConsumerWidget {
     final achievementsAsync = ref.watch(achievementsProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.paper,
       appBar: AppBar(
-        title: const Text('成就徽章'),
+        backgroundColor: AppColors.paper,
+        foregroundColor: AppColors.ink,
+        elevation: 0,
+        title: Text('成就徽章', style: AppTypography.title),
       ),
       body: achievementsAsync.when(
         data: (achievements) {
@@ -25,28 +30,34 @@ class AchievementsScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Card(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.forest, AppColors.forestLight],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                      boxShadow: AppColors.softShadow(blur: 16),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
                         children: [
                           Text(
                             '$unlocked',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
+                            style: AppTypography.displaySmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 48,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '已获得 / ${achievements.length} 个徽章',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: AppColors.textSecondary),
+                            style: AppTypography.body.copyWith(
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
                           ),
                         ],
                       ),
@@ -61,7 +72,7 @@ class AchievementsScreen extends ConsumerWidget {
                     crossAxisCount: 2,
                     mainAxisSpacing: AppSpacing.md,
                     crossAxisSpacing: AppSpacing.md,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: 1.05,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -75,8 +86,12 @@ class AchievementsScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => const Center(child: Text('加载失败')),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.forest),
+        ),
+        error: (_, __) => Center(
+          child: Text('加载失败', style: AppTypography.body),
+        ),
       ),
     );
   }
@@ -89,9 +104,14 @@ class _AchievementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final opacity = achievement.isUnlocked ? 1.0 : 0.35;
+    final opacity = achievement.isUnlocked ? 1.0 : 0.4;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: AppColors.softShadow(blur: 8),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -102,7 +122,7 @@ class _AchievementCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: achievement.color.withValues(alpha: 0.15),
+                  color: achievement.color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -117,9 +137,9 @@ class _AchievementCard extends StatelessWidget {
               opacity: opacity,
               child: Text(
                 achievement.name,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: AppTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -128,9 +148,9 @@ class _AchievementCard extends StatelessWidget {
               opacity: opacity,
               child: Text(
                 achievement.description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.inkMuted,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -138,7 +158,7 @@ class _AchievementCard extends StatelessWidget {
             ),
             if (!achievement.isUnlocked) ...[
               const SizedBox(height: 4),
-              const Icon(Icons.lock, size: 14, color: AppColors.textHint),
+              const Icon(Icons.lock, size: 14, color: AppColors.inkMuted),
             ],
           ],
         ),

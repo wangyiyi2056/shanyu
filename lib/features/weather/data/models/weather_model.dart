@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// 天气数据模型
 class WeatherData {
   final double temperature; // 当前温度 °C
@@ -7,6 +9,7 @@ class WeatherData {
   final double? maxTemp; // 最高温度
   final double? minTemp; // 最低温度
   final DateTime updatedAt;
+  final List<DailyForecast>? forecast; // 未来几日预报
 
   const WeatherData({
     required this.temperature,
@@ -16,20 +19,36 @@ class WeatherData {
     this.maxTemp,
     this.minTemp,
     required this.updatedAt,
+    this.forecast,
   });
 
-  /// 获取天气图标
-  String get iconEmoji {
+  /// 获取天气图标（Material 图标）
+  IconData get iconData {
     return switch (weatherCode) {
-      0 => '☀️',
-      1 || 2 || 3 => '🌤️',
-      45 || 48 => '☁️',
-      51 || 53 || 55 || 56 || 57 => '🌧️',
-      61 || 63 || 65 || 66 || 67 => '🌧️',
-      71 || 73 || 75 || 77 || 85 || 86 => '❄️',
-      80 || 81 || 82 => '🌦️',
-      95 || 96 || 99 => '⛈️',
-      _ => '🌤️',
+      0 => Icons.wb_sunny,
+      1 || 2 || 3 => Icons.wb_cloudy,
+      45 || 48 => Icons.cloud,
+      51 || 53 || 55 || 56 || 57 => Icons.water_drop,
+      61 || 63 || 65 || 66 || 67 => Icons.water_drop,
+      71 || 73 || 75 || 77 || 85 || 86 => Icons.ac_unit,
+      80 || 81 || 82 => Icons.grain,
+      95 || 96 || 99 => Icons.bolt,
+      _ => Icons.wb_cloudy,
+    };
+  }
+
+  /// 获取天气图标颜色
+  Color get iconColor {
+    return switch (weatherCode) {
+      0 => Colors.orange,
+      1 || 2 || 3 => Colors.amber,
+      45 || 48 => Colors.blueGrey,
+      51 || 53 || 55 || 56 || 57 => Colors.lightBlue,
+      61 || 63 || 65 || 66 || 67 => Colors.blue,
+      71 || 73 || 75 || 77 || 85 || 86 => Colors.cyan,
+      80 || 81 || 82 => Colors.indigo,
+      95 || 96 || 99 => Colors.deepPurple,
+      _ => Colors.amber,
     };
   }
 
@@ -82,6 +101,62 @@ class WeatherData {
       return '天气不错，但气温较低，建议携带保暖衣物。';
     }
     return '天气条件良好，非常适合爬山！';
+  }
+}
+
+/// 每日天气预报
+class DailyForecast {
+  final DateTime date;
+  final double maxTemp;
+  final double minTemp;
+  final int weatherCode;
+  final String description;
+
+  const DailyForecast({
+    required this.date,
+    required this.maxTemp,
+    required this.minTemp,
+    required this.weatherCode,
+    required this.description,
+  });
+
+  IconData get iconData => _getIconForCode(weatherCode);
+
+  Color get iconColor => _getColorForCode(weatherCode);
+
+  bool get isGoodForHiking {
+    if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99].contains(weatherCode)) {
+      return false;
+    }
+    return true;
+  }
+
+  IconData _getIconForCode(int code) {
+    return switch (code) {
+      0 => Icons.wb_sunny,
+      1 || 2 || 3 => Icons.wb_cloudy,
+      45 || 48 => Icons.cloud,
+      51 || 53 || 55 || 56 || 57 => Icons.water_drop,
+      61 || 63 || 65 || 66 || 67 => Icons.water_drop,
+      71 || 73 || 75 || 77 || 85 || 86 => Icons.ac_unit,
+      80 || 81 || 82 => Icons.grain,
+      95 || 96 || 99 => Icons.bolt,
+      _ => Icons.wb_cloudy,
+    };
+  }
+
+  Color _getColorForCode(int code) {
+    return switch (code) {
+      0 => Colors.orange,
+      1 || 2 || 3 => Colors.amber,
+      45 || 48 => Colors.blueGrey,
+      51 || 53 || 55 || 56 || 57 => Colors.lightBlue,
+      61 || 63 || 65 || 66 || 67 => Colors.blue,
+      71 || 73 || 75 || 77 || 85 || 86 => Colors.cyan,
+      80 || 81 || 82 => Colors.indigo,
+      95 || 96 || 99 => Colors.deepPurple,
+      _ => Colors.amber,
+    };
   }
 }
 

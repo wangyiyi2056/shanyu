@@ -1,16 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
+import 'package:hiking_assistant/features/hiking/data/datasources/route_api_datasource.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
 
-// Datasource provider
+// API datasource provider (connects to backend)
+final routeApiDatasourceProvider = Provider<RouteApiDatasource>((ref) {
+  return RouteApiDatasource.instance;
+});
+
+// Local datasource provider (fallback)
 final routeLocalDatasourceProvider = Provider<RouteLocalDatasource>((ref) {
   return RouteLocalDatasource();
 });
 
-// UseCase provider
+// UseCase provider - uses API datasource with local fallback
 final routeRecommendationUseCaseProvider =
     Provider<RouteRecommendationUseCase>((ref) {
-  return RouteRecommendationUseCase(ref.watch(routeLocalDatasourceProvider));
+  final apiDatasource = ref.watch(routeApiDatasourceProvider);
+  final localDatasource = ref.watch(routeLocalDatasourceProvider);
+  return RouteRecommendationUseCase(
+    RouteApiDatasourceAdapter(apiDatasource),
+    localDatasource,
+  );
 });
 
 // 推荐路线列表
