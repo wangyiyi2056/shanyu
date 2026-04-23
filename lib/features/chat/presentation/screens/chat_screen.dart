@@ -4,6 +4,7 @@ import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/chat/presentation/providers/chat_provider.dart';
+import 'package:hiking_assistant/features/chat/presentation/providers/speech_provider.dart';
 import 'package:hiking_assistant/features/chat/presentation/widgets/chat_bubble.dart';
 import 'package:hiking_assistant/features/chat/presentation/widgets/input_bar.dart';
 import 'package:hiking_assistant/features/chat/presentation/widgets/quick_replies.dart';
@@ -56,6 +57,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatNotifierProvider);
+    final speechState = ref.watch(speechNotifierProvider);
+
+    // 监听语音识别结果，识别完成后自动发送
+    ref.listen(speechNotifierProvider, (previous, next) {
+      if (previous?.isListening == true &&
+          next.isListening == false &&
+          next.recognizedWords.isNotEmpty) {
+        // 语音识别结束且有内容，自动发送
+        ref.read(chatNotifierProvider.notifier).sendMessage(next.recognizedWords);
+        _scrollToBottom();
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.paper,
@@ -101,6 +114,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
         actions: [
+          if (speechState.isAvailable)
+            IconButton(
+              icon: Icon(
+                speechState.isSpeaking ? Icons.volume_up : Icons.volume_off,
+                color: speechState.isSpeaking
+                    ? AppColors.forest
+                    : AppColors.inkMuted,
+              ),
+              onPressed: () {
+                if (speechState.isSpeaking) {
+                  ref.read(speechNotifierProvider.notifier).stopSpeaking();
+                }
+              },
+              tooltip: speechState.isSpeaking ? '停止朗读' : '语音输出',
+            ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: AppColors.ink),
             onPressed: () {
@@ -122,8 +150,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // 加载指示器
           if (chatState.isLoading) _buildLoadingIndicator(),
 
+          // 语音识别中指示器
+          if (speechState.isListening) _buildVoiceInputIndicator(speechState),
+
           // 快捷回复
-          if (chatState.messages.isEmpty)
+          if (chatState.messages.isEmpty && !speechState.isListening)
             QuickReplies(
               onSelect: (text) {
                 ref.read(chatNotifierProvider.notifier).sendMessage(text);
@@ -132,12 +163,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
 
           // 输入框
-          InputBar(
-            onSend: (content) {
-              ref.read(chatNotifierProvider.notifier).sendMessage(content);
-              _scrollToBottom();
-            },
-          ),
+          if (!speechState.isListening)
+            InputBar(
+              onSend: (content) {
+                ref.read(chatNotifierProvider.notifier).sendMessage(content);
+                _scrollToBottom();
+              },
+              onVoiceInput: () {
+                ref.read(speechNotifierProvider.notifier).toggleListening();
+              },
+            ),
         ],
       ),
     );
@@ -234,6 +269,65 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildVoiceInputIndicator(SpeechState speechState) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.forest.withValues(alpha: 0.08),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusLg),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.forest.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.mic,
+                    color: AppColors.forest,
+                    size: 32,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              speechState.recognizedWords.isEmpty
+                  ? '正在聆听...'
+                  : speechState.recognizedWords,
+              style: AppTypography.body.copyWith(
+                color: AppColors.ink,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextButton.icon(
+              onPressed: () {
+                ref.read(speechNotifierProvider.notifier).cancelListening();
+              },
+              icon: const Icon(Icons.close, size: 18),
+              label: const Text('取消'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.inkMuted,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

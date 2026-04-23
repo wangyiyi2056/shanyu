@@ -18,6 +18,7 @@ import 'package:hiking_assistant/features/profile/presentation/screens/settings_
 import 'package:hiking_assistant/features/tracking/presentation/screens/track_detail_screen.dart';
 import 'package:hiking_assistant/features/tracking/presentation/screens/track_list_screen.dart';
 import 'package:hiking_assistant/features/weather/data/models/weather_model.dart';
+import 'package:hiking_assistant/features/plant/presentation/screens/plant_identification_screen.dart';
 import 'package:hiking_assistant/features/weather/presentation/screens/weather_detail_screen.dart';
 import 'package:hiking_assistant/shared/widgets/app_shell.dart';
 
@@ -148,6 +149,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return WeatherDetailScreen(
             weather: extra['weather'] as WeatherData,
             locationName: extra['locationName'] as String? ?? '当前位置',
+          );
+        },
+      ),
+
+      // 植物识别页
+      GoRoute(
+        path: '/plant-identification',
+        name: 'plantIdentification',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return PlantIdentificationScreen(
+            initialImageBytes: extra?['imageBytes'] as Uint8List?,
+            initialMediaType: extra?['mediaType'] as String?,
           );
         },
       ),

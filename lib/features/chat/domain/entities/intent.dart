@@ -18,6 +18,7 @@ enum IntentCategory {
   settings,
   help,
   plantIdentification,
+  trainingPlan,
   unknown,
 }
 
@@ -69,6 +70,7 @@ class Intent {
       IntentCategory.settings => '设置',
       IntentCategory.help => '帮助',
       IntentCategory.plantIdentification => '植物识别',
+      IntentCategory.trainingPlan => '训练计划',
       IntentCategory.unknown => '未知',
     };
   }

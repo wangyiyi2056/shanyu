@@ -1,6 +1,7 @@
-import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
-import 'package:hiking_assistant/features/hiking/data/datasources/route_api_datasource.dart';
+import 'package:hiking_assistant/features/chat/data/datasources/conversation_local_datasource.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
+import 'package:hiking_assistant/features/hiking/domain/repositories/route_repository.dart';
+import 'package:hiking_assistant/shared/utils/geo_utils.dart';
 
 /// 用户偏好
 class RoutePreferences {
@@ -10,6 +11,7 @@ class RoutePreferences {
   final List<String>? requiredTags;
   final double? userLatitude;
   final double? userLongitude;
+  final UserMemoryProfile? userProfile; // 用户画像，用于个性化推荐
 
   const RoutePreferences({
     this.preferredDifficulty,
@@ -18,6 +20,7 @@ class RoutePreferences {
     this.requiredTags,
     this.userLatitude,
     this.userLongitude,
+    this.userProfile,
   });
 
   @override
@@ -30,7 +33,8 @@ class RoutePreferences {
           maxDistance == other.maxDistance &&
           _listEquals(requiredTags, other.requiredTags) &&
           userLatitude == other.userLatitude &&
-          userLongitude == other.userLongitude;
+          userLongitude == other.userLongitude &&
+          userProfile == other.userProfile;
 
   @override
   int get hashCode => Object.hash(
@@ -40,6 +44,7 @@ class RoutePreferences {
         requiredTags,
         userLatitude,
         userLongitude,
+        userProfile,
       );
 
   bool _listEquals(List<String>? a, List<String>? b) {
@@ -65,92 +70,11 @@ class RouteRecommendation {
   });
 }
 
-/// 路线数据源抽象接口
-abstract class RouteDatasource {
-  Future<List<HikingRoute>> getAllRoutes();
-  Future<HikingRoute?> getRouteById(String id);
-  Future<List<HikingRoute>> searchRoutes(String query);
-  Future<List<HikingRoute>> getRoutesByDifficulty(String difficulty);
-  Future<List<HikingRoute>> recommendRoutes({
-    String? preferredDifficulty,
-    int? maxDuration,
-    double? maxDistance,
-    List<String>? requiredTags,
-  });
-}
-
-/// RouteApiDatasource 的适配器
-class RouteApiDatasourceAdapter implements RouteDatasource {
-  final RouteApiDatasource _api;
-
-  RouteApiDatasourceAdapter(this._api);
-
-  @override
-  Future<List<HikingRoute>> getAllRoutes() => _api.getAllRoutes();
-
-  @override
-  Future<HikingRoute?> getRouteById(String id) => _api.getRouteById(id);
-
-  @override
-  Future<List<HikingRoute>> searchRoutes(String query) => _api.searchRoutes(query);
-
-  @override
-  Future<List<HikingRoute>> getRoutesByDifficulty(String difficulty) =>
-      _api.getRoutesByDifficulty(difficulty);
-
-  @override
-  Future<List<HikingRoute>> recommendRoutes({
-    String? preferredDifficulty,
-    int? maxDuration,
-    double? maxDistance,
-    List<String>? requiredTags,
-  }) => _api.recommendRoutes(
-    preferredDifficulty: preferredDifficulty,
-    maxDuration: maxDuration,
-    maxDistance: maxDistance,
-    requiredTags: requiredTags,
-  );
-}
-
-/// RouteLocalDatasource 的适配器
-class RouteLocalDatasourceAdapter implements RouteDatasource {
-  final RouteLocalDatasource _local;
-
-  RouteLocalDatasourceAdapter(this._local);
-
-  @override
-  Future<List<HikingRoute>> getAllRoutes() => _local.getAllRoutes();
-
-  @override
-  Future<HikingRoute?> getRouteById(String id) => _local.getRouteById(id);
-
-  @override
-  Future<List<HikingRoute>> searchRoutes(String query) => _local.searchRoutes(query);
-
-  @override
-  Future<List<HikingRoute>> getRoutesByDifficulty(String difficulty) =>
-      _local.getRoutesByDifficulty(difficulty);
-
-  @override
-  Future<List<HikingRoute>> recommendRoutes({
-    String? preferredDifficulty,
-    int? maxDuration,
-    double? maxDistance,
-    List<String>? requiredTags,
-  }) => _local.recommendRoutes(
-    preferredDifficulty: preferredDifficulty,
-    maxDuration: maxDuration,
-    maxDistance: maxDistance,
-    requiredTags: requiredTags,
-  );
-}
-
-/// 路线推荐用例
+/// 路线推荐用例 - 依赖 domain 层的 RouteRepository 接口
 class RouteRecommendationUseCase {
-  final RouteDatasource _datasource;
-  final RouteLocalDatasource? _localFallback;
+  final RouteRepository _repository;
 
-  RouteRecommendationUseCase(this._datasource, [this._localFallback]);
+  RouteRecommendationUseCase(this._repository);
 
   /// 根据用户偏好推荐路线
   Future<List<RouteRecommendation>> getRecommendations({
@@ -158,7 +82,7 @@ class RouteRecommendationUseCase {
     int limit = 5,
   }) async {
     try {
-      final routes = await _datasource.recommendRoutes(
+      final routes = await _repository.recommendRoutes(
         preferredDifficulty: preferences.preferredDifficulty,
         maxDuration: preferences.maxDuration,
         maxDistance: preferences.maxDistance,
@@ -166,17 +90,6 @@ class RouteRecommendationUseCase {
       );
       return _buildRecommendations(routes, preferences, limit);
     } catch (e) {
-      // Fallback to local if API fails
-      final local = _localFallback;
-      if (local != null) {
-        final routes = await local.recommendRoutes(
-          preferredDifficulty: preferences.preferredDifficulty,
-          maxDuration: preferences.maxDuration,
-          maxDistance: preferences.maxDistance,
-          requiredTags: preferences.requiredTags,
-        );
-        return _buildRecommendations(routes, preferences, limit);
-      }
       return [];
     }
   }
@@ -186,18 +99,13 @@ class RouteRecommendationUseCase {
     required RoutePreferences preferences,
     int limit = 5,
   }) {
-    // Sync method only works with local datasource
-    final local = _localFallback;
-    if (local != null) {
-      final routes = local.recommendRoutesSync(
-        preferredDifficulty: preferences.preferredDifficulty,
-        maxDuration: preferences.maxDuration,
-        maxDistance: preferences.maxDistance,
-        requiredTags: preferences.requiredTags,
-      );
-      return _buildRecommendations(routes, preferences, limit);
-    }
-    return [];
+    final routes = _repository.recommendRoutesSync(
+      preferredDifficulty: preferences.preferredDifficulty,
+      maxDuration: preferences.maxDuration,
+      maxDistance: preferences.maxDistance,
+      requiredTags: preferences.requiredTags,
+    );
+    return _buildRecommendations(routes, preferences, limit);
   }
 
   List<RouteRecommendation> _buildRecommendations(
@@ -205,10 +113,13 @@ class RouteRecommendationUseCase {
     RoutePreferences preferences,
     int limit,
   ) {
+    // 合并用户画像到偏好（画像作为兜底/增强）
+    final effectivePrefs = _mergeWithUserProfile(preferences);
+
     // 如果有用户位置，按距离排序
     List<HikingRoute> sortedRoutes = routes;
-    final userLatitude = preferences.userLatitude;
-    final userLongitude = preferences.userLongitude;
+    final userLatitude = effectivePrefs.userLatitude;
+    final userLongitude = effectivePrefs.userLongitude;
     if (userLatitude != null && userLongitude != null) {
       sortedRoutes = _sortByDistance(
         routes,
@@ -217,22 +128,76 @@ class RouteRecommendationUseCase {
       );
     }
 
-    // 限制返回数量
-    sortedRoutes = sortedRoutes.take(limit).toList();
-
-    // 生成推荐理由
-    return sortedRoutes.map((route) {
+    // 个性化排序：按匹配分数重新排序
+    final scored = sortedRoutes.map((route) {
+      final score = _calculateMatchScore(route, effectivePrefs);
+      final reasons = _generateMatchReasons(route, effectivePrefs);
       return RouteRecommendation(
         route: route,
-        matchScore: _calculateMatchScore(route, preferences),
-        matchReasons: _generateMatchReasons(route, preferences),
+        matchScore: score,
+        matchReasons: reasons,
       );
     }).toList();
+
+    scored.sort((a, b) => b.matchScore.compareTo(a.matchScore));
+
+    // 限制返回数量
+    return scored.take(limit).toList();
+  }
+
+  /// 将用户画像合并到偏好中（画像作为兜底）
+  RoutePreferences _mergeWithUserProfile(RoutePreferences prefs) {
+    final profile = prefs.userProfile;
+    if (profile == null) return prefs;
+
+    // 如果用户没有明确指定难度，使用画像中的偏好
+    String? difficulty = prefs.preferredDifficulty;
+    if (difficulty == null || difficulty.isEmpty) {
+      difficulty = profile.preferredDifficulty;
+    }
+
+    // 如果用户没有明确指定时长，使用画像中的偏好
+    int? maxDuration = prefs.maxDuration;
+    if (maxDuration == null && profile.preferredDuration != null) {
+      maxDuration = _parseDuration(profile.preferredDuration!);
+    }
+
+    // 如果用户没有明确指定距离，使用画像中的偏好
+    double? maxDistance = prefs.maxDistance;
+    if (maxDistance == null && profile.preferredDistance != null) {
+      maxDistance = _parseDistance(profile.preferredDistance!);
+    }
+
+    return RoutePreferences(
+      preferredDifficulty: difficulty,
+      maxDuration: maxDuration,
+      maxDistance: maxDistance,
+      requiredTags: prefs.requiredTags,
+      userLatitude: prefs.userLatitude,
+      userLongitude: prefs.userLongitude,
+      userProfile: profile,
+    );
+  }
+
+  int? _parseDuration(String duration) {
+    final d = duration.toLowerCase();
+    if (d.contains('短时间') || d.contains('小时')) return 60;
+    if (d.contains('半天')) return 240;
+    if (d.contains('全天')) return 480;
+    return null;
+  }
+
+  double? _parseDistance(String distance) {
+    final d = distance.toLowerCase();
+    if (d.contains('短途')) return 3.0;
+    if (d.contains('中程')) return 8.0;
+    if (d.contains('长途')) return 15.0;
+    return null;
   }
 
   /// 根据地点搜索路线
   Future<List<RouteRecommendation>> searchByLocation(String location) async {
-    final routes = await _datasource.searchRoutes(location);
+    final routes = await _repository.searchRoutes(location);
 
     return routes.map((route) {
       return RouteRecommendation(
@@ -268,81 +233,21 @@ class RouteRecommendationUseCase {
 
     double minDist = double.infinity;
     for (final wp in waypoints) {
-      final dist = _haversineDistance(
+      final dist = GeoUtils.haversineDistance(
         userLat,
         userLng,
         wp.latitude,
         wp.longitude,
-      );
+      ) / 1000; // Convert to km
       if (dist < minDist) minDist = dist;
     }
     return minDist;
   }
 
-  /// 计算两点间的球面距离（km）
-  double _haversineDistance(
-    double lat1,
-    double lon1,
-    double lat2,
-    double lon2,
-  ) {
-    const R = 6371.0; // 地球半径
-    final dLat = _toRad(lat2 - lat1);
-    final dLon = _toRad(lon2 - lon1);
-    final a = _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(_toRad(lat1)) *
-            _cos(_toRad(lat2)) *
-            _sin(dLon / 2) *
-            _sin(dLon / 2);
-    final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
-    return R * c;
-  }
-
-  double _toRad(double deg) => deg * 3.141592653589793 / 180;
-  double _sin(double x) => _sinApprox(x);
-  double _cos(double x) => _cosApprox(x);
-  double _sqrt(double x) => _sqrtApprox(x);
-  double _atan2(double y, double x) => _atan2Approx(y, x);
-
-  // 近似计算
-  double _sinApprox(double x) {
-    x = x % (2 * 3.141592653589793);
-    return x - (x * x * x) / 6 + (x * x * x * x * x) / 120;
-  }
-
-  double _cosApprox(double x) {
-    x = x % (2 * 3.141592653589793);
-    return 1 - (x * x) / 2 + (x * x * x * x) / 24;
-  }
-
-  double _sqrtApprox(double x) {
-    if (x <= 0) return 0;
-    double guess = x / 2;
-    for (int i = 0; i < 10; i++) {
-      guess = (guess + x / guess) / 2;
-    }
-    return guess;
-  }
-
-  double _atan2Approx(double y, double x) {
-    if (x > 0) return _atanApprox(y / x);
-    if (x < 0 && y >= 0) return _atanApprox(y / x) + 3.141592653589793;
-    if (x < 0 && y < 0) return _atanApprox(y / x) - 3.141592653589793;
-    if (x == 0 && y > 0) return 3.141592653589793 / 2;
-    if (x == 0 && y < 0) return -3.141592653589793 / 2;
-    return 0;
-  }
-
-  double _atanApprox(double x) {
-    if (x.abs() > 1) {
-      return (3.141592653589793 / 2) - _atanApprox(1 / x);
-    }
-    return x - (x * x * x) / 3 + (x * x * x * x * x) / 5;
-  }
-
-  /// 计算匹配分数
+  /// 计算匹配分数（考虑用户画像）
   double _calculateMatchScore(HikingRoute route, RoutePreferences prefs) {
     double score = 0.5; // 基础分
+    final profile = prefs.userProfile;
 
     // 难度匹配
     final preferredDifficulty = prefs.preferredDifficulty;
@@ -363,6 +268,41 @@ class RouteRecommendationUseCase {
       score += 0.1;
     }
 
+    // 用户画像增强：喜欢的路线加分
+    if (profile != null && profile.favoriteRoutes.isNotEmpty) {
+      for (final favorite in profile.favoriteRoutes) {
+        if (route.name.contains(favorite) || favorite.contains(route.name)) {
+          score += 0.15;
+          break;
+        }
+      }
+    }
+
+    // 用户画像增强：不喜欢的路线减分
+    if (profile != null && profile.dislikedRoutes.isNotEmpty) {
+      for (final disliked in profile.dislikedRoutes) {
+        if (route.name.contains(disliked) || disliked.contains(route.name)) {
+          score -= 0.2;
+          break;
+        }
+      }
+    }
+
+    // 体能水平匹配
+    if (profile?.fitnessLevel != null) {
+      final fitness = profile!.fitnessLevel!.toLowerCase();
+      final isEasyRoute = route.difficulty == 'easy';
+      final isHardRoute = route.difficulty == 'hard' || route.difficulty == 'expert';
+
+      if (fitness.contains('新手') || fitness.contains('初级')) {
+        if (isEasyRoute) score += 0.1;
+        if (isHardRoute) score -= 0.15;
+      } else if (fitness.contains('高级') || fitness.contains('专业')) {
+        if (isHardRoute) score += 0.1;
+        if (isEasyRoute) score -= 0.05;
+      }
+    }
+
     return score.clamp(0.0, 1.0);
   }
 
@@ -380,10 +320,34 @@ class RouteRecommendationUseCase {
     return true;
   }
 
-  /// 生成推荐理由
+  /// 生成推荐理由（包含个性化理由）
   List<String> _generateMatchReasons(
       HikingRoute route, RoutePreferences prefs) {
     final reasons = <String>[];
+    final profile = prefs.userProfile;
+
+    // 画像驱动的推荐理由
+    if (profile != null) {
+      // 喜欢的路线
+      for (final favorite in profile.favoriteRoutes) {
+        if (route.name.contains(favorite) || favorite.contains(route.name)) {
+          reasons.add('您曾喜欢过类似路线');
+          break;
+        }
+      }
+
+      // 体能匹配
+      final fitness = profile.fitnessLevel;
+      if (fitness != null) {
+        final isEasy = route.difficulty == 'easy';
+        final isHard = route.difficulty == 'hard' || route.difficulty == 'expert';
+        if ((fitness.contains('新手') || fitness.contains('初级')) && isEasy) {
+          reasons.add('难度适合您的体能水平($fitness)');
+        } else if ((fitness.contains('高级') || fitness.contains('专业')) && isHard) {
+          reasons.add('难度适合您的体能水平($fitness)');
+        }
+      }
+    }
 
     final preferredDifficulty = prefs.preferredDifficulty;
     if (preferredDifficulty != null) {

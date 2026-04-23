@@ -1,18 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hiking_assistant/features/hiking/data/datasources/route_local_datasource.dart';
+import 'package:hiking_assistant/features/hiking/data/datasources/route_api_datasource.dart';
+import 'package:hiking_assistant/features/hiking/data/repositories/route_repository_impl.dart';
 import 'package:hiking_assistant/features/hiking/data/models/route_model.dart';
 import 'package:hiking_assistant/features/hiking/domain/usecases/route_recommendation_usecase.dart';
+import 'package:hiking_assistant/shared/utils/geo_utils.dart';
 
 void main() {
-  late RouteLocalDatasource datasource;
+  late RouteRepositoryImpl repository;
   late RouteRecommendationUseCase useCase;
 
   setUp(() {
-    datasource = RouteLocalDatasource();
-    useCase = RouteRecommendationUseCase(
-      RouteLocalDatasourceAdapter(datasource),
-      datasource,
+    final localDatasource = RouteLocalDatasource();
+    repository = RouteRepositoryImpl(
+      apiDatasource: RouteApiDatasource.instance,
+      localDatasource: localDatasource,
     );
+    useCase = RouteRecommendationUseCase(repository);
   });
 
   group('RouteRecommendationUseCase', () {
@@ -231,47 +235,8 @@ double _minWaypointDistance(
 ) {
   double minDist = double.infinity;
   for (final wp in waypoints) {
-    final dist =
-        _haversineDistance(userLat, userLng, wp.latitude, wp.longitude);
+    final dist = GeoUtils.haversineDistance(userLat, userLng, wp.latitude, wp.longitude) / 1000;
     if (dist < minDist) minDist = dist;
   }
   return minDist;
-}
-
-double _haversineDistance(double lat1, double lon1, double lat2, double lon2) {
-  const R = 6371.0;
-  final dLat = _toRad(lat2 - lat1);
-  final dLon = _toRad(lon2 - lon1);
-  final a = _sin(dLat / 2) * _sin(dLat / 2) +
-      _cos(_toRad(lat1)) * _cos(_toRad(lat2)) * _sin(dLon / 2) * _sin(dLon / 2);
-  final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
-  return R * c;
-}
-
-double _toRad(double deg) => deg * 3.14159265358979323846 / 180.0;
-double _sin(double x) => x - (x * x * x) / 6 + (x * x * x * x * x) / 120;
-double _cos(double x) => 1 - (x * x) / 2 + (x * x * x * x) / 24;
-double _sqrt(double x) {
-  if (x <= 0) return 0;
-  double guess = x / 2;
-  for (int i = 0; i < 10; i++) {
-    guess = (guess + x / guess) / 2;
-  }
-  return guess;
-}
-
-double _atan2(double y, double x) {
-  if (x > 0) return _atan(y / x);
-  if (x < 0 && y >= 0) return _atan(y / x) + 3.14159265358979323846;
-  if (x < 0 && y < 0) return _atan(y / x) - 3.14159265358979323846;
-  if (x == 0 && y > 0) return 3.14159265358979323846 / 2;
-  if (x == 0 && y < 0) return -3.14159265358979323846 / 2;
-  return 0;
-}
-
-double _atan(double x) {
-  if (x.abs() > 1) {
-    return (3.14159265358979323846 / 2) - _atan(1 / x);
-  }
-  return x - (x * x * x) / 3 + (x * x * x * x * x) / 5;
 }

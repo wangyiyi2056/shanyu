@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hiking_assistant/features/auth/presentation/providers/auth_provider.dart';
@@ -7,6 +6,7 @@ import 'package:hiking_assistant/features/tracking/data/datasources/track_api_da
 import 'package:hiking_assistant/features/tracking/data/datasources/track_local_datasource.dart';
 import 'package:hiking_assistant/features/tracking/data/models/track_model.dart';
 import 'package:hiking_assistant/features/tracking/domain/repositories/track_repository.dart';
+import 'package:hiking_assistant/shared/utils/geo_utils.dart';
 
 /// 轨迹 API 数据源 Provider (连接后端)
 final trackApiDatasourceProvider = Provider<TrackApiDatasource>((ref) {
@@ -215,7 +215,7 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
 
       if (state.points.isNotEmpty) {
         final last = state.points.last;
-        newDistance += _haversineDistance(
+        newDistance += GeoUtils.haversineDistance(
           last.latitude,
           last.longitude,
           point.latitude,
@@ -315,27 +315,6 @@ class TrackRecorderNotifier extends StateNotifier<RecorderState> {
 
     state = const RecorderState();
   }
-
-  /// 计算两点间球面距离（米）
-  double _haversineDistance(
-      double lat1, double lon1, double lat2, double lon2) {
-    const R = 6371000.0;
-    final dLat = _toRad(lat2 - lat1);
-    final dLon = _toRad(lon2 - lon1);
-    final a = _sin(dLat / 2) * _sin(dLat / 2) +
-        _cos(_toRad(lat1)) *
-            _cos(_toRad(lat2)) *
-            _sin(dLon / 2) *
-            _sin(dLon / 2);
-    final c = 2 * _atan2(_sqrt(a), _sqrt(1 - a));
-    return R * c;
-  }
-
-  double _toRad(double deg) => deg * pi / 180;
-  double _sin(double x) => sin(x);
-  double _cos(double x) => cos(x);
-  double _sqrt(double x) => sqrt(x);
-  double _atan2(double y, double x) => atan2(y, x);
 
   @override
   void dispose() {

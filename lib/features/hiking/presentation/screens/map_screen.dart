@@ -17,6 +17,10 @@ import 'package:hiking_assistant/features/hiking/presentation/widgets/nearby_rou
 import 'package:hiking_assistant/features/hiking/presentation/widgets/recording_status_panel.dart';
 import 'package:hiking_assistant/features/tracking/presentation/providers/tracking_provider.dart';
 import 'package:hiking_assistant/shared/utils/color_utils.dart';
+import 'package:hiking_assistant/shared/widgets/glass_icon_button.dart';
+import 'package:hiking_assistant/shared/widgets/map_style_tile.dart';
+import 'package:hiking_assistant/shared/widgets/mountain_marker.dart';
+import 'package:hiking_assistant/shared/widgets/topographic_painter.dart';
 
 // 默认位置（北京）
 const LatLng _defaultCenter = LatLng(39.9042, 116.4074);
@@ -59,7 +63,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         _userLocation = latLng;
         _locationLoaded = true;
       });
-      _mapController.move(latLng, _defaultZoom);
+      // 等待地图渲染后再移动
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _mapController.move(latLng, _defaultZoom);
+        }
+      });
     }
   }
 
@@ -198,7 +207,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         height: 44,
                         child: GestureDetector(
                           onTap: () => _openRouteDetail(rec.route),
-                          child: _MountainMarker(
+                          child: MountainMarker(
                             color: hexToColor(rec.route.difficultyColor),
                           ),
                         ),
@@ -296,7 +305,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 ? topPadding + 128
                 : topPadding + 72,
             left: AppSpacing.md,
-            child: _GlassIconButton(
+            child: GlassIconButton(
               icon: Icons.layers_outlined,
               onTap: () => _showMapStyleSelector(context),
             ),
@@ -346,7 +355,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       height: 24,
                       child: CustomPaint(
                         size: Size(MediaQuery.of(context).size.width, 24),
-                        painter: _TopographicPainter(),
+                        painter: TopographicPainter(),
                       ),
                     ),
                     // 拖动指示条
@@ -531,19 +540,19 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   ),
                 ),
                 const Divider(height: 1),
-                _MapStyleTile(
+                MapStyleTile(
                   icon: Icons.map,
                   label: '标准地图',
                   onTap: () => Navigator.pop(context),
                 ),
                 const Divider(height: 1, indent: 56),
-                _MapStyleTile(
+                MapStyleTile(
                   icon: Icons.satellite,
                   label: '卫星地图',
                   onTap: () => Navigator.pop(context),
                 ),
                 const Divider(height: 1, indent: 56),
-                _MapStyleTile(
+                MapStyleTile(
                   icon: Icons.terrain,
                   label: '地形图',
                   onTap: () => Navigator.pop(context),
@@ -819,185 +828,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             child: const Text('保存'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MapStyleTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _MapStyleTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.paperDark,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: Icon(icon, color: AppColors.ink),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Text(label, style: AppTypography.body),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MountainMarker extends StatelessWidget {
-  final Color color;
-
-  const _MountainMarker({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.4),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Center(
-        child: CustomPaint(
-          size: const Size(24, 20),
-          painter: _MountainPainter(color: color),
-        ),
-      ),
-    );
-  }
-}
-
-class _MountainPainter extends CustomPainter {
-  final Color color;
-
-  _MountainPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    final path = ui.Path()
-      ..moveTo(size.width * 0.5, 0)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-
-    canvas.drawPath(path, paint);
-
-    // 山顶积雪
-    final snowPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final snowPath = ui.Path()
-      ..moveTo(size.width * 0.5, 0)
-      ..lineTo(size.width * 0.62, size.height * 0.45)
-      ..lineTo(size.width * 0.5, size.height * 0.35)
-      ..lineTo(size.width * 0.38, size.height * 0.45)
-      ..close();
-
-    canvas.drawPath(snowPath, snowPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _TopographicPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.forest.withValues(alpha: 0.08)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    for (var i = 0; i < 4; i++) {
-      final y = 6.0 + i * 5;
-      final path = ui.Path();
-      for (var x = 0.0; x <= size.width; x += 8) {
-        final dy = y + (x % 16 < 8 ? -2 : 2);
-        if (x == 0) {
-          path.moveTo(x, dy);
-        } else {
-          path.lineTo(x, dy);
-        }
-      }
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _GlassIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _GlassIconButton({
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Material(
-          color: Colors.white.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: AppColors.ink),
-            ),
-          ),
-        ),
       ),
     );
   }

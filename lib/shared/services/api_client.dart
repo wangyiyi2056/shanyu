@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hiking_assistant/core/constants/app_constants.dart';
 
 /// API Client for Hiking Assistant Backend
 class ApiClient {
@@ -7,8 +8,8 @@ class ApiClient {
 
   static ApiClient get instance => ApiClient._();
 
-  // TODO: Configure base URL for production
-  static const String _baseUrl = 'http://localhost:8000';
+  // Base URL 从 AppConstants 获取，支持环境变量注入
+  static const String _baseUrl = AppConstants.apiBaseUrl;
 
   String? _authToken;
 

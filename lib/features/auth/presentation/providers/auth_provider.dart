@@ -84,14 +84,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
     try {
       final result = await _authApi.signInAsGuest(name: name);
-      if (result.success && result.token != null && result.user != null) {
-        await _storage.write(key: 'auth_token', value: result.token!);
-        state = AuthAuthenticated(result.user!, result.token!);
-        return true;
-      } else {
+      if (!result.success) {
         state = AuthError(result.error ?? '登录失败');
         return false;
       }
+      final token = result.token;
+      final user = result.user;
+      if (token == null || user == null) {
+        state = const AuthError('登录失败：缺少必要信息');
+        return false;
+      }
+      await _storage.write(key: 'auth_token', value: token);
+      state = AuthAuthenticated(user, token);
+      return true;
     } catch (e) {
       state = AuthError('登录失败: $e');
       return false;
@@ -103,14 +108,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthLoading();
     try {
       final result = await _authApi.signInWithGoogle(googleToken);
-      if (result.success && result.token != null && result.user != null) {
-        await _storage.write(key: 'auth_token', value: result.token!);
-        state = AuthAuthenticated(result.user!, result.token!);
-        return true;
-      } else {
+      if (!result.success) {
         state = AuthError(result.error ?? '登录失败');
         return false;
       }
+      final token = result.token;
+      final user = result.user;
+      if (token == null || user == null) {
+        state = const AuthError('登录失败：缺少必要信息');
+        return false;
+      }
+      await _storage.write(key: 'auth_token', value: token);
+      state = AuthAuthenticated(user, token);
+      return true;
     } catch (e) {
       state = AuthError('登录失败: $e');
       return false;

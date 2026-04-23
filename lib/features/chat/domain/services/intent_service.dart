@@ -70,6 +70,17 @@ class LocalIntentRules {
       priority: 25,
     ),
 
+    // 训练计划
+    IntentRule(
+      patterns: [
+        RegExp(r'训练计划|锻炼计划|体能训练|爬山训练|准备.*爬'),
+        RegExp(r'怎么准备|如何训练|提升体能|增强体力'),
+        RegExp(r'几周.*训练|训练.*周|备战'),
+      ],
+      category: IntentCategory.trainingPlan,
+      priority: 28,
+    ),
+
     // 问候
     IntentRule(
       patterns: [

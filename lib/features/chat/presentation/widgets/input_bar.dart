@@ -128,14 +128,14 @@ class _InputBarState extends State<InputBar> {
 
           const SizedBox(width: AppSpacing.sm),
 
-          // 发送按钮
+          // 发送/语音按钮
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             child: Material(
               color: _hasText ? AppColors.forest : Colors.transparent,
               borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
               child: InkWell(
-                onTap: _hasText ? _handleSend : null,
+                onTap: _hasText ? _handleSend : widget.onVoiceInput,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 child: Container(
                   width: 44,
@@ -152,7 +152,7 @@ class _InputBarState extends State<InputBar> {
                         )
                       : null,
                   child: Icon(
-                    Icons.send,
+                    _hasText ? Icons.send : Icons.mic,
                     color: _hasText ? Colors.white : AppColors.inkMuted,
                     size: 20,
                   ),

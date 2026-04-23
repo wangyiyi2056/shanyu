@@ -505,9 +505,7 @@ class _QuickActionsPills extends StatelessWidget {
       ('找路线', Icons.route, () => context.go('/chat')),
       ('导航', Icons.navigation, () => context.go('/map')),
       ('记录', Icons.play_circle_outline, () => context.go('/map')),
-      ('识植物', Icons.photo_camera, () => context.go(
-            '/chat?message=我在爬山时看到一种不认识的植物，请帮我描述一下常见野外植物的识别方法和注意事项',
-          )),
+      ('识植物', Icons.photo_camera, () => context.push('/plant-identification')),
     ];
 
     return Wrap(

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hiking_assistant/core/theme/app_colors.dart';
 import 'package:hiking_assistant/core/theme/app_spacing.dart';
 import 'package:hiking_assistant/core/theme/app_typography.dart';
 import 'package:hiking_assistant/features/chat/domain/entities/message.dart';
+import 'package:hiking_assistant/features/chat/presentation/providers/speech_provider.dart';
 
-class ChatBubble extends StatelessWidget {
+class ChatBubble extends ConsumerWidget {
   final Message message;
   final bool showAvatar;
 
@@ -19,7 +22,7 @@ class ChatBubble extends StatelessWidget {
   bool get isUser => message.role == MessageRole.user;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
@@ -163,16 +166,43 @@ class ChatBubble extends StatelessWidget {
                     ),
                   ),
 
-                  // 时间戳
+                  // Action Cards
+                  if (message.actionCards.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildActionCards(context, message.actionCards),
+                  ],
+
+                  // 时间戳 + 朗读按钮
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    _formatTime(message.createdAt),
-                    style: AppTypography.bodySmall.copyWith(
-                      fontSize: 10,
-                      color: isUser
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : AppColors.inkMuted,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatTime(message.createdAt),
+                        style: AppTypography.bodySmall.copyWith(
+                          fontSize: 10,
+                          color: isUser
+                              ? Colors.white.withValues(alpha: 0.8)
+                              : AppColors.inkMuted,
+                        ),
+                      ),
+                      if (!isUser) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        GestureDetector(
+                          onTap: () {
+                            final text = message.content
+                                .replaceAll(RegExp(r'[*#_\[\]\(\)]'), ' ')
+                                .trim();
+                            ref.read(speechNotifierProvider.notifier).speak(text);
+                          },
+                          child: Icon(
+                            Icons.volume_up,
+                            size: 14,
+                            color: AppColors.inkMuted,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -222,5 +252,71 @@ class ChatBubble extends StatelessWidget {
       return;
     }
     launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Widget _buildActionCards(BuildContext context, List<ActionCard> cards) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: cards.map((card) {
+        return GestureDetector(
+          onTap: () => _handleActionCardTap(context, card),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.forest, AppColors.forestLight],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.forest.withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.touch_app,
+                  size: 14,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  card.label,
+                  style: AppTypography.label.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _handleActionCardTap(BuildContext context, ActionCard card) {
+    switch (card.type) {
+      case ActionCardType.button:
+        if (card.action.startsWith('/')) {
+          context.push(card.action);
+        } else {
+          // 处理其他 action 类型
+        }
+      case ActionCardType.link:
+        _handleLinkTap(context, card.action);
+      case ActionCardType.input:
+      // 输入类型暂不处理
+    }
   }
 }

@@ -16,13 +16,10 @@ class TrackApiDatasource {
       query: {'limit': limit.toString(), 'offset': offset.toString()},
     );
 
-    if (response.isSuccess && response.listData != null) {
-      return response.listData!
-          .cast<Map<String, dynamic>>()
-          .map(_parseTrack)
-          .toList();
-    }
-    return [];
+    if (!response.isSuccess) return [];
+    final listData = response.listData;
+    if (listData == null) return [];
+    return listData.cast<Map<String, dynamic>>().map(_parseTrack).toList();
   }
 
   /// Get public tracks
@@ -32,43 +29,40 @@ class TrackApiDatasource {
       query: {'limit': limit.toString(), 'offset': offset.toString()},
     );
 
-    if (response.isSuccess && response.listData != null) {
-      return response.listData!
-          .cast<Map<String, dynamic>>()
-          .map(_parseTrack)
-          .toList();
-    }
-    return [];
+    if (!response.isSuccess) return [];
+    final listData = response.listData;
+    if (listData == null) return [];
+    return listData.cast<Map<String, dynamic>>().map(_parseTrack).toList();
   }
 
   /// Get public track by ID with points (no auth required)
   Future<TrackWithPoints?> getPublicTrackById(String id) async {
     final response = await _client.get('/tracks/public/$id');
 
-    if (response.isSuccess && response.data != null) {
-      final track = _parseTrack(response.data!);
-      final points = (response.data!['points'] as List?)
-          ?.cast<Map<String, dynamic>>()
-          .map((p) => _parsePoint(p, track.id))
-          .toList() ?? [];
-      return TrackWithPoints(track: track, points: points);
-    }
-    return null;
+    if (!response.isSuccess) return null;
+    final data = response.data;
+    if (data == null) return null;
+    final track = _parseTrack(data);
+    final points = (data['points'] as List?)
+        ?.cast<Map<String, dynamic>>()
+        .map((p) => _parsePoint(p, track.id))
+        .toList() ?? [];
+    return TrackWithPoints(track: track, points: points);
   }
 
   /// Get track by ID with points
   Future<TrackWithPoints?> getTrackById(String id) async {
     final response = await _client.get('/tracks/$id');
 
-    if (response.isSuccess && response.data != null) {
-      final track = _parseTrack(response.data!);
-      final points = (response.data!['points'] as List?)
-          ?.cast<Map<String, dynamic>>()
-          .map((p) => _parsePoint(p, track.id))
-          .toList() ?? [];
-      return TrackWithPoints(track: track, points: points);
-    }
-    return null;
+    if (!response.isSuccess) return null;
+    final data = response.data;
+    if (data == null) return null;
+    final track = _parseTrack(data);
+    final points = (data['points'] as List?)
+        ?.cast<Map<String, dynamic>>()
+        .map((p) => _parsePoint(p, track.id))
+        .toList() ?? [];
+    return TrackWithPoints(track: track, points: points);
   }
 
   /// Create a new track
@@ -96,10 +90,10 @@ class TrackApiDatasource {
       },
     );
 
-    if (response.isSuccess && response.data != null) {
-      return _parseTrack(response.data!);
-    }
-    return null;
+    if (!response.isSuccess) return null;
+    final data = response.data;
+    if (data == null) return null;
+    return _parseTrack(data);
   }
 
   /// Add points to an existing track
@@ -133,10 +127,10 @@ class TrackApiDatasource {
       },
     );
 
-    if (response.isSuccess && response.data != null) {
-      return _parseTrack(response.data!);
-    }
-    return null;
+    if (!response.isSuccess) return null;
+    final data = response.data;
+    if (data == null) return null;
+    return _parseTrack(data);
   }
 
   /// Delete track
